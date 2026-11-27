@@ -2172,5 +2172,53 @@
   requestAnimationFrame(frame);
 })();
 </script>
+<style id="reveal-seq">
+  .hero h1, .hero .cn, .hero .sign { animation: none !important; opacity: 1 !important; transform: none !important; }
+  .hero .ch { display: inline-block; white-space: pre; opacity: 0; transform: translateY(.42em);
+    transition: opacity .62s ease, transform .62s cubic-bezier(.2,.7,.3,1); }
+  .hero.go .ch { opacity: 1; transform: none; }
+  .hero .rule { transform-origin: left center; transform: scaleX(0); opacity: 1 !important;
+    animation: none !important; transition: transform 1.05s cubic-bezier(.2,.7,.3,1); }
+  .hero.go .rule { transform: scaleX(1); }
+</style>
+<script>
+(function () {
+  var hero = document.querySelector(".hero");
+  if (!hero) return;
+  function split(el, base) {
+    if (!el) return 0;
+    var txt = el.textContent, i, n = 0;
+    el.textContent = "";
+    for (i = 0; i < txt.length; i++) {
+      var c = txt.charAt(i);
+      var s = document.createElement("span");
+      s.className = "ch";
+      s.style.whiteSpace = "pre";
+      s.textContent = c;
+      s.style.transitionDelay = (base + n * 42) + "ms";
+      el.appendChild(s);
+      n++;
+    }
+    return n;
+  }
+  var ah = split(hero.querySelector("h1"), 0);
+  split(hero.querySelector(".cn"), ah * 42 + 260);
+  split(hero.querySelector(".sign"), ah * 42 + 560);
+  var start = performance.now(), fired = false, prev = 9, still = 0;
+  function go() { if (!fired) { fired = true; hero.classList.add("go"); } }
+  function tick() {
+    var st = (window.__xmas && window.__xmas.state) ? window.__xmas.state() : null;
+    if (st && st.done) {
+      var el = st.el;
+      if (Math.abs(el - prev) < 0.0015) still++; else still = 0;
+      prev = el;
+      if (still > 6 && Math.abs(Math.abs(el) - 0.698) < 0.09) return go();
+    }
+    if (performance.now() - start > 7000) return go();
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+})();
+</script>
 </body>
 </html>
