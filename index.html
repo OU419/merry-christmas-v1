@@ -2220,5 +2220,25 @@
   requestAnimationFrame(tick);
 })();
 </script>
+<script id="audio-unlock-shim">
+(function () {
+  var done = false;
+  function icon() { var i = document.getElementById("pico"); return i ? i.textContent.trim() : ""; }
+  function tryStart() {
+    if (done) return;
+    var btn = document.getElementById("phead");
+    if (!btn) return;
+    if (icon().indexOf("\u25B6") < 0 && icon() !== "") { done = true; return; }
+    btn.click();
+    setTimeout(function () {
+      if (icon().indexOf("\u25B6") >= 0) btn.click();
+      if (icon().indexOf("\u25B6") < 0) done = true;
+    }, 420);
+  }
+  ["pointerdown", "touchstart", "click"].forEach(function (t) {
+    document.addEventListener(t, tryStart, { passive: true });
+  });
+})();
+</script>
 </body>
 </html>
