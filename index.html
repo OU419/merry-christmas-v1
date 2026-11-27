@@ -2363,9 +2363,12 @@
     var aud = document.getElementById("aud");
     var pbar = $("pbar"), pfill = $("pfill"), pknob = $("pknob");
     var fileReady = false, seeking = false;
-    aud.src = "take-a-bow.m4a";
-    aud.addEventListener("canplay", function () { fileReady = true; pname.textContent = "Take a Bow"; sync(); });
-    aud.addEventListener("error", function () { fileReady = false; });
+    var CANDIDATES = ["off-the-hook.m4a", "off-the-hook.mp3", "take-a-bow.m4a", "bgm.m4a", "bgm.mp3"];
+    var ci = 0;
+    function tryNext() { if (ci >= CANDIDATES.length) return; aud.src = CANDIDATES[ci++]; }
+    tryNext();
+    aud.addEventListener("canplay", function () { fileReady = true; pname.textContent = (aud.src.split("/").pop() || "").replace(/\.[a-z0-9]+$/i, "").replace(/-/g, " ") || "背景音乐"; sync(); });
+    aud.addEventListener("error", function () { fileReady = false; tryNext(); });
     aud.addEventListener("ended", function () { userPaused = true; sync(); });
     function seekTo(e) {
       var r = pbar.getBoundingClientRect();
