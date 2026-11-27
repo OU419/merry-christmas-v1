@@ -2222,21 +2222,23 @@
 </script>
 <script id="audio-unlock-shim">
 (function () {
-  var done = false;
-  function icon() { var i = document.getElementById("pico"); return i ? i.textContent.trim() : ""; }
-  function tryStart() {
-    if (done) return;
+  var tries = 0;
+  function silent() {
+    try { return !(window.__xmas && window.__xmas.state().music.ctx === "running"); }
+    catch (e) { return true; }
+  }
+  function start() {
+    if (!silent() || tries > 3) return;
     var btn = document.getElementById("phead");
     if (!btn) return;
-    if (icon().indexOf("\u25B6") < 0 && icon() !== "") { done = true; return; }
+    tries++;
     btn.click();
     setTimeout(function () {
-      if (icon().indexOf("\u25B6") >= 0) btn.click();
-      if (icon().indexOf("\u25B6") < 0) done = true;
-    }, 420);
+      if (silent() && tries < 4) { tries++; var b2 = document.getElementById("phead"); if (b2) b2.click(); }
+    }, 520);
   }
   ["pointerdown", "touchstart", "click"].forEach(function (t) {
-    document.addEventListener(t, tryStart, { passive: true });
+    document.addEventListener(t, start, { passive: true });
   });
 })();
 </script>
