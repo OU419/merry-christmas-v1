@@ -1,0 +1,2176 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Merry Christmas</title>
+<style>
+  *{box-sizing:border-box;}
+  html,body{
+    height:100%;margin:0;background:#0a060f;overflow:hidden;
+    font-family:"Segoe UI",system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    color:#ffeae2;cursor:grab;-webkit-font-smoothing:antialiased;
+    -webkit-tap-highlight-color:transparent;
+  }
+  body.dragging{cursor:grabbing;}
+  #stage{position:fixed;inset:0;overflow:hidden;touch-action:none;}
+  #scene{position:absolute;inset:0;width:100%;height:100%;display:block;}
+
+  .vig{
+    position:absolute;inset:0;pointer-events:none;z-index:8;
+    background:radial-gradient(ellipse at 50% 44%,rgba(0,0,0,0) 32%,rgba(12,6,14,.42) 70%,rgba(9,4,11,.9) 100%);
+  }
+  .veil{
+    position:absolute;inset:0;z-index:20;background:#0a060f;pointer-events:none;
+    animation:veil 3s ease-out forwards;
+  }
+  @keyframes veil{0%{opacity:1}100%{opacity:0;visibility:hidden}}
+
+  .hero{
+    position:absolute;left:0;right:0;bottom:clamp(22px,7.4vh,84px);z-index:5;
+    display:flex;flex-direction:column;align-items:center;gap:16px;
+    pointer-events:none;text-align:center;
+  }
+  .hero h1{
+    margin:0;line-height:1;font-weight:400;font-style:italic;
+    font-family:"Playfair Display","Didot","Bodoni MT",Georgia,"Songti SC",serif;
+    font-size:clamp(30px,5.4vw,76px);letter-spacing:.1em;text-indent:.1em;
+    color:#fff5ec;
+    text-shadow:0 0 18px rgba(255,236,222,.5),0 0 60px rgba(255,180,150,.42),0 0 130px rgba(255,130,150,.24);
+    opacity:0;animation:rise 2.2s cubic-bezier(.2,.7,.3,1) 3.3s forwards;
+  }
+  .hero .rule{
+    width:min(300px,44vw);height:1px;opacity:0;
+    background:linear-gradient(90deg,rgba(255,206,170,0),rgba(255,214,180,.8),rgba(255,168,170,.7),rgba(255,206,170,0));
+    box-shadow:0 0 22px rgba(255,180,160,.55);
+    animation:rise 2s ease-out 3.7s forwards;
+  }
+  .hero .cn{
+    margin:0;font-family:"Songti SC","STSong",Georgia,serif;
+    font-size:clamp(10px,1.4vw,13px);letter-spacing:.62em;text-indent:.62em;
+    color:rgba(255,222,212,.78);text-shadow:0 0 26px rgba(255,150,160,.35);
+    opacity:0;animation:rise 2s ease-out 4s forwards;
+  }
+  .hero .sign{
+    margin:2px 0 0;font-family:Georgia,"Playfair Display",serif;
+    font-size:clamp(11px,1.5vw,15px);letter-spacing:.5em;text-indent:.5em;
+    color:rgba(255,222,198,.62);text-shadow:0 0 26px rgba(255,172,150,.45);
+    opacity:0;animation:rise 1.8s ease-out 4.3s forwards;
+  }
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+  .hint{
+    position:absolute;left:50%;transform:translateX(-50%);bottom:16px;z-index:6;
+    pointer-events:none;font-size:10px;letter-spacing:.28em;
+    color:rgba(255,228,218,.26);opacity:0;
+    animation:rise 1.6s ease-out 4.8s forwards;
+    transition:opacity 1.6s ease;
+  }
+  .hint.gone{opacity:0 !important;}
+
+  .replay{
+    position:absolute;left:22px;bottom:20px;z-index:9;width:36px;height:36px;padding:0;
+    cursor:pointer;font-size:15px;line-height:1;color:rgba(255,226,220,.55);
+    background:rgba(58,30,42,.5);border:1px solid rgba(255,186,180,.18);border-radius:50%;
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    box-shadow:0 6px 26px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,222,214,.14);
+    transition:color .25s,border-color .25s,transform .5s;
+  }
+  .replay:hover{color:#ffe6dc;border-color:rgba(255,186,180,.45);transform:rotate(-90deg);}
+
+  .player{
+    position:absolute;right:22px;bottom:20px;z-index:9;
+    display:flex;align-items:center;gap:12px;padding:7px 16px 7px 7px;
+    background:rgba(38,21,30,.5);border:1px solid rgba(255,190,180,.16);
+    border-radius:999px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    box-shadow:0 12px 36px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,222,214,.12);
+    transition:border-color .3s;
+  }
+  .player:hover{border-color:rgba(255,190,180,.3);}
+  .pbtn{
+    width:36px;height:36px;flex:0 0 auto;padding:0;border:0;border-radius:50%;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;line-height:1;color:#3a1420;
+    background:linear-gradient(135deg,#ffd9ba,#ffaec2);
+    box-shadow:0 0 18px rgba(255,150,160,.45);
+    transition:transform .25s,box-shadow .3s;
+  }
+  .pbtn:hover{transform:scale(1.07);box-shadow:0 0 26px rgba(255,150,160,.6);}
+  .player.playing .pbtn{animation:pulse 2.8s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{box-shadow:0 0 18px rgba(255,150,160,.4)}50%{box-shadow:0 0 28px rgba(255,150,160,.7)}}
+  .pmeta{display:flex;flex-direction:column;gap:3px;min-width:94px;}
+  .ptitle{font-size:11.5px;letter-spacing:.16em;color:#ffe9de;}
+  .psub{font-size:9.5px;letter-spacing:.12em;color:rgba(255,220,206,.42);}
+  .pvol{width:86px;display:flex;align-items:center;}
+  .pvol input[type=range]{
+    -webkit-appearance:none;appearance:none;width:100%;height:3px;border-radius:2px;
+    background:linear-gradient(90deg,#ffd9ba,#ffaec2);outline:none;cursor:pointer;
+  }
+  .pvol input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:11px;height:11px;border-radius:50%;
+    background:#fff6ee;box-shadow:0 0 10px rgba(255,160,170,.85);cursor:pointer;
+  }
+  .pvol input[type=range]::-moz-range-thumb{
+    width:11px;height:11px;border:0;border-radius:50%;background:#fff6ee;
+    box-shadow:0 0 10px rgba(255,160,170,.85);cursor:pointer;
+  }
+
+  @media (max-width:680px){
+    .player{right:12px;bottom:12px;gap:9px;padding:6px 12px 6px 6px;}
+    .pbtn{width:32px;height:32px;}
+    .pmeta{min-width:76px;}
+    .pvol{width:62px;}
+    .hero h1{letter-spacing:.06em;text-indent:.06em;}
+    .hint{font-size:9px;letter-spacing:.18em;}
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="scene"></canvas>
+  <div class="vig"></div>
+
+  <div class="hero">
+    <h1>Merry Christmas</h1>
+    <div class="rule"></div>
+    <p class="cn">愿此刻的雪 · 只落在你心上</p>
+    <p class="sign" id="sign">· Y ·</p>
+  </div>
+
+  <div class="hint" id="hint">按住拖动 · 360&#176; 环绕　／　轻触 · 爱心洒落</div>
+  <button class="replay" id="replayBtn" type="button" title="重播生成">&#8635;</button>
+
+  <div class="player" id="player">
+    <button class="pbtn" id="phead" type="button" title="播放 / 暂停"><span id="pico">&#9654;</span></button>
+    <div class="pmeta">
+      <div class="ptitle" id="pname">星河奔涌</div>
+      <div class="psub" id="psub">点击播放</div>
+    </div>
+    <div class="pvol"><input id="vol" type="range" min="0" max="100" value="55"></div>
+  </div>
+
+  <div class="veil"></div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var SELF_SRC = (function () {
+    var ss = document.getElementsByTagName('script');
+    for (var i = ss.length - 1; i >= 0; i--) {
+      var tx = ss[i].textContent || '';
+      if (tx.length > 800) return tx;
+    }
+    return '';
+  })();
+
+  var $ = function (id) { return document.getElementById(id); };
+  var cv = $('scene');
+  var ctx = cv.getContext('2d');
+  var scn = document.createElement('canvas'), sctx = scn.getContext('2d');
+  var tcv = document.createElement('canvas'), tctx = tcv.getContext('2d');
+  var bcv = document.createElement('canvas'), bctx = bcv.getContext('2d');
+
+  /* 私人订制：地址栏加 #字母 即可换掉你的专属徽记，例如 xxx.html#YX */
+  var PERS = (function () {
+    var h = (location.hash || '').replace('#', '').trim();
+    var mono = h ? h.slice(0, 2).toUpperCase() : 'Y';
+    return { mono: mono };
+  })();
+
+  var TAU = Math.PI * 2;
+  var CAM = 5.2;
+  var TH = 2.5;
+  var R0 = 1.45;
+  var RISE_EL = 0.698;              // 生长时抬升到俯视 40°
+  var VIEW_EL = -0.698;             // 定场：仰视 40°
+  var GROW_MS = 3000;
+
+  var W = 1, H = 1, DPR = 1;
+  var CX = 0, CY = 0, S = 200, SBASE = 200;
+  var small = false;
+  var time = 0, last = 0;
+  var LIGHTS = [], GAR = [], ORN = [], snow = [], stars = [], bokeh = [], fg = [], sparks = [];
+  var G = {};
+
+  var PC = 1, PS = 0, ROT = 0;
+  var spin = 0, spinV = 1.05, BUILD_ANG = 0;
+  var growT = 0, growDone = false, starPop = 0, growAcc = 0, settle = 0, g0 = null, FRAMES = 0;
+  var quality = 2, fpsAvg = 60, qHold = 1, huge = false;   // 2=全效 1=精简 0=最省
+  var resMul = 1, resCd = 0;                               // 分辨率系数（冲 120fps 用）
+  var refresh = 60, rfN = 0, rfSum = 0;                     // 估屏幕刷新率，用来定帧率目标
+  var refresh = 60, rfN = 0, rfSum = 0;                     // 估屏幕刷新率，用来定帧率目标
+
+  var cam = { az: 0.10, el: 0.10, zoom: 1.20, look: -TH / 2 };
+  var tgt = { az: 0.10, el: 0.10, zoom: 1.20, look: -TH / 2 };
+  var FINAL = { az: 0.62, el: VIEW_EL, zoom: 1.0, look: -0.14 };  // 俯视 40°，留出顶部空间
+  var EL_MIN = -0.85, EL_MAX = 1.45;
+  var dragging = false, dragS = null, vel = { az: 0, el: 0 }, userMoved = false, lastInput = 0, lastMove = 0;
+
+  function rnd(a, b) { return a + Math.random() * (b - a); }
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function smooth(t) { return t * t * (3 - 2 * t); }
+
+  /* ================= 左侧半透明代码流 ================= */
+  var CODE = [], CLH = 15, cColW = 340, codeScroll = 0, cCharW = 6.6, codeGrad = null, codeSpeed = 17;
+  var CFONT = '11px ui-monospace,"Cascadia Mono",Consolas,"Courier New",monospace';
+
+  function buildCode() {
+    cColW = small ? Math.min(W * 0.30, 138) : Math.min(W * 0.32, 400);
+    if (cColW < 110) cColW = 110;
+    ctx.save();
+    ctx.font = CFONT;
+    cCharW = ctx.measureText('M').width || 6.6;
+    ctx.restore();
+    var chars = Math.max(16, Math.floor((cColW - 20) / cCharW));
+    var src = (SELF_SRC || '').replace(/\r/g, '').trim();
+    if (!src) src = '// source unavailable';
+    CODE = [];
+    var ls = src.split('\n');
+    for (var i = 0; i < ls.length; i++) {
+      var L = ls[i].replace(/\t/g, '  ').replace(/[^\x20-\x7e]/g, '');
+      if (L.length <= chars) CODE.push(L);
+      else {
+        for (var k = 0; k < L.length; k += chars) CODE.push(L.substr(k, chars));
+      }
+    }
+    codeGrad = ctx.createLinearGradient(8, 0, cColW, 0);
+    codeGrad.addColorStop(0, 'rgba(255,228,214,0.95)');
+    codeGrad.addColorStop(0.55, 'rgba(255,216,202,0.52)');
+    codeGrad.addColorStop(1, 'rgba(255,206,196,0)');
+  }
+
+  function drawCode(dt) {
+    if (!CODE.length) return;
+    var total = CODE.length * CLH;
+    codeScroll = (codeScroll + dt * codeSpeed) % total;
+    var first = Math.floor(codeScroll / CLH);
+    var off = codeScroll - first * CLH;
+    var rows = Math.ceil(H / CLH) + 1;
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.font = CFONT;
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = codeGrad;
+    ctx.globalAlpha = 0.30;
+    for (var i = 0; i <= rows; i++) {
+      var idx = (first + i) % CODE.length;
+      ctx.fillText(CODE[idx], 10, i * CLH - off);
+    }
+    ctx.restore();
+  }
+
+  /* ================= 柔光精灵 ================= */
+  function mk(c1, c2) {
+    var n = 64, c = document.createElement('canvas');
+    c.width = c.height = n;
+    var g = c.getContext('2d');
+    var rg = g.createRadialGradient(n / 2, n / 2, 0, n / 2, n / 2, n / 2);
+    rg.addColorStop(0, c2);
+    rg.addColorStop(0.22, c1);
+    rg.addColorStop(0.55, 'rgba(0,0,0,0.05)');
+    rg.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = rg;
+    g.fillRect(0, 0, n, n);
+    return c;
+  }
+  var SP = {
+    cream: mk('rgba(255,243,228,0.32)', 'rgba(255,252,247,0.90)'),
+    gold:  mk('rgba(234,204,160,0.32)', 'rgba(255,247,233,0.90)'),
+    rose:  mk('rgba(204,154,158,0.26)', 'rgba(245,237,236,0.86)'),
+    lav:   mk('rgba(176,164,202,0.23)', 'rgba(233,231,244,0.84)'),
+    white: mk('rgba(255,247,241,0.30)', 'rgba(255,255,255,0.97)')
+  };
+  var SPK = ['cream', 'gold', 'rose', 'cream', 'gold', 'lav', 'white'];
+
+  /* ================= 羽毛 / 花瓣 ================= */
+  /* 玻璃泡泡：亮边 + 高光，比羽毛安全得多 */
+  function makeBubble(rgb, alpha) {
+    var n = 128, c = document.createElement('canvas');
+    c.width = c.height = n;
+    var g = c.getContext('2d');
+    var cx = n / 2, r = n * 0.46;
+    var grd = g.createRadialGradient(cx, cx, r * 0.08, cx, cx, r);
+    grd.addColorStop(0, 'rgba(' + rgb + ',0.012)');
+    grd.addColorStop(0.55, 'rgba(' + rgb + ',0.038)');
+    grd.addColorStop(0.82, 'rgba(' + rgb + ',' + (alpha * 0.45).toFixed(3) + ')');
+    grd.addColorStop(0.95, 'rgba(' + rgb + ',' + alpha.toFixed(3) + ')');
+    grd.addColorStop(1, 'rgba(' + rgb + ',0)');
+    g.fillStyle = grd;
+    g.beginPath(); g.arc(cx, cx, r, 0, Math.PI * 2); g.fill();
+
+    var hx = cx - r * 0.36, hy = cx - r * 0.38;
+    var hl = g.createRadialGradient(hx, hy, 0, hx, hy, r * 0.34);
+    hl.addColorStop(0, 'rgba(255,255,255,' + Math.min(1, alpha * 1.5).toFixed(3) + ')');
+    hl.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = hl;
+    g.beginPath(); g.arc(hx, hy, r * 0.34, 0, Math.PI * 2); g.fill();
+
+    g.strokeStyle = 'rgba(255,255,255,' + (alpha * 0.45).toFixed(3) + ')';
+    g.lineWidth = 1.2;
+    g.beginPath(); g.arc(cx, cx, r * 0.97, 0, Math.PI * 2); g.stroke();
+    return c;
+  }
+
+  function makePetal(rgb) {
+    var n = 64, c = document.createElement('canvas');
+    c.width = c.height = n;
+    var g = c.getContext('2d');
+    var grd = g.createRadialGradient(n * 0.42, n * 0.4, 1, n * 0.5, n * 0.5, n * 0.5);
+    grd.addColorStop(0, 'rgba(' + rgb + ',0.95)');
+    grd.addColorStop(0.55, 'rgba(' + rgb + ',0.5)');
+    grd.addColorStop(1, 'rgba(' + rgb + ',0)');
+    g.fillStyle = grd;
+    g.beginPath();
+    g.ellipse(n * 0.5, n * 0.5, n * 0.42, n * 0.24, -0.5, 0, Math.PI * 2);
+    g.fill();
+    return c;
+  }
+
+  var PL = {
+    cream: makeBubble('255,240,226', 0.55),
+    rose:  makeBubble('255,170,196', 0.52),
+    lav:   makeBubble('208,180,255', 0.5),
+    gold:  makeBubble('255,214,164', 0.52)
+  };
+  var PT = {
+    rose: makePetal('255,172,190'),
+    cream: makePetal('255,238,222'),
+    lav: makePetal('210,184,255')
+  };
+
+  /* ================= 交错的浪漫元素数据 ================= */
+  var AFT = [], FFE = [], PTL = [];
+
+  function buildRomance() {
+    AFT = []; FFE = []; PTL = [];
+    var keys = ['cream', 'rose', 'lav', 'gold'];
+    // 贴在树上的羽毛
+    var nA = small ? 5 : 7;
+    for (var i = 0; i < nA; i++) {
+      var t = 0.08 + Math.random() * 0.86;
+      AFT.push({
+        y: -TH / 2 + t * TH,
+        a: Math.random() * TAU,
+        r: R0 * Math.pow(1 - t, 0.95) * rnd(0.55, 1.02),
+        s: rnd(7, 15) * (small ? 0.85 : 1),
+        rot: rnd(-0.9, 0.9),
+        spr: PL[keys[(Math.random() * keys.length) | 0]],
+        ph: Math.random() * TAU
+      });
+    }
+    // 空中飘的羽毛
+    var nF = small ? 6 : 10;
+    for (var j = 0; j < nF; j++) {
+      FFE.push({
+        x: Math.random() * W, y: Math.random() * H,
+        s: rnd(10, 22), rot: Math.random() * TAU, vr: rnd(-0.3, 0.3),
+        vy: rnd(-9, -26), vx: rnd(-7, 7), ph: Math.random() * TAU,
+        a: rnd(0.13, 0.28),
+        spr: PL[keys[(Math.random() * keys.length) | 0]]
+      });
+    }
+    // 花瓣
+    var nP = small ? 16 : 30;
+    var pk = ['rose', 'cream', 'lav'];
+    for (var k = 0; k < nP; k++) {
+      PTL.push({
+        x: Math.random() * W, y: Math.random() * H,
+        s: rnd(9, 22), rot: Math.random() * TAU, vr: rnd(-1.1, 1.1),
+        vy: rnd(9, 30), vx: rnd(-12, 12), ph: Math.random() * TAU,
+        a: rnd(0.25, 0.55),
+        spr: PT[pk[(Math.random() * pk.length) | 0]]
+      });
+    }
+  }
+
+  /* 树上垂下的珍珠光串 */
+  var PRL = [];
+  function buildPearls() {
+    PRL = [];
+    var nS = small ? 3 : 5;
+    for (var s = 0; s < nS; s++) {
+      var t0 = 0.18 + s * 0.13 + Math.random() * 0.05;
+      var ang = (s / nS) * TAU + Math.random() * 0.5;
+      var rad = R0 * Math.pow(1 - t0, 0.95) * 1.02;
+      var y0 = -TH / 2 + t0 * TH;
+      var beads = 5 + ((Math.random() * 3) | 0);
+      for (var b = 0; b < beads; b++) {
+        var f2 = b / beads;
+        PRL.push({
+          a: ang + f2 * 0.05,
+          r: rad * (1.0 - f2 * 0.12),
+          y: y0 - f2 * 0.42,
+          s: 3.0 + Math.random() * 1.4,
+          ph: Math.random() * TAU
+        });
+      }
+    }
+  }
+  function drawPearls(g) {
+    var p = { x: 0, y: 0, k: 0, z: 0 };
+    for (var i = 0; i < PRL.length; i++) {
+      var q = PRL[i];
+      var v = visY(q.y);
+      if (!v) continue;
+      P(q.r * Math.cos(q.a + ROT), q.y, q.r * Math.sin(q.a + ROT), p);
+      var dep = 0.45 + 0.55 * clamp((p.z / R0 + 1) / 2, 0, 1);
+      var tw = 0.7 + 0.3 * Math.sin(time * 1.4 + q.ph);
+      var rad = q.s * (p.k / S) * (0.7 + 0.5 * dep) * tw;
+      g.globalAlpha = clamp(v * (0.5 + 0.45 * dep) * tw, 0, 1);
+      g.drawImage(i % 3 === 0 ? SP.white : SP.cream, p.x - rad, p.y - rad, rad * 2, rad * 2);
+    }
+    g.globalAlpha = 1;
+  }
+
+  function drawTreeBubbles(g) {
+    var p = { x: 0, y: 0, k: 0, z: 0 };
+    for (var i = 0; i < AFT.length; i++) {
+      var fd = AFT[i];
+      var v = visY(fd.y);
+      if (!v) continue;
+      P(fd.r * Math.cos(fd.a + ROT), fd.y, fd.r * Math.sin(fd.a + ROT), p);
+      var sc = fd.s * (p.k / S) * v * (0.86 + 0.14 * Math.sin(time * 0.85 + fd.ph));
+      g.save();
+      g.globalAlpha = (0.26 + 0.18 * Math.sin(time * 0.7 + fd.ph)) * v;
+      g.translate(p.x, p.y);
+      g.scale(1, 0.94 + 0.06 * Math.sin(time * 1.1 + fd.ph));
+      g.drawImage(fd.spr, -sc, -sc, sc * 2, sc * 2);
+      g.restore();
+    }
+    g.globalAlpha = 1;
+  }
+
+  function updateFloat(dt) {
+    var i;
+    for (i = 0; i < FFE.length; i++) {
+      var f = FFE[i];
+      f.y += f.vy * dt;
+      f.x += (f.vx + Math.sin(time * 0.5 + f.ph) * 9) * dt;
+      f.rot += f.vr * dt;
+      if (f.y < -90) { f.y = H + 60; f.x = Math.random() * W; }
+      if (f.x < -80) f.x = W + 60; else if (f.x > W + 80) f.x = -60;
+    }
+    for (i = 0; i < PTL.length; i++) {
+      var q = PTL[i];
+      q.y += q.vy * dt;
+      q.x += (q.vx + Math.sin(time * 0.9 + q.ph) * 22) * dt;
+      q.rot += q.vr * dt;
+      if (q.y > H + 40) { q.y = -30; q.x = Math.random() * W; }
+      if (q.x < -40) q.x = W + 20; else if (q.x > W + 40) q.x = -20;
+    }
+  }
+
+  function drawFloat(g) {
+    var i, f, q;
+    g.save();
+    g.globalCompositeOperation = 'lighter';
+    for (i = 0; i < PTL.length; i++) {
+      q = PTL[i];
+      g.save();
+      g.globalAlpha = q.a * (0.55 + 0.45 * Math.sin(time * 1.1 + q.ph));
+      g.translate(q.x, q.y);
+      g.rotate(q.rot);
+      g.scale(1, 0.62 + 0.38 * Math.abs(Math.sin(time * 1.6 + q.ph)));
+      g.drawImage(q.spr, -q.s, -q.s, q.s * 2, q.s * 2);
+      g.restore();
+    }
+    for (i = 0; i < FFE.length; i++) {
+      f = FFE[i];
+      g.save();
+      g.globalAlpha = f.a * (0.6 + 0.4 * Math.sin(time * 0.8 + f.ph));
+      g.translate(f.x, f.y);
+      g.rotate(f.rot);
+      g.drawImage(f.spr, -f.s * 0.5, -f.s * 0.5, f.s, f.s);
+      g.restore();
+    }
+    g.restore();
+  }
+
+  /* ================= 点云树 ================= */
+  function buildTree() {
+    LIGHTS = []; GAR = []; ORN = [];
+    var LV = small ? 10 : 23, BR = small ? 17 : 44;
+    for (var L = 0; L < LV; L++) {
+      var t = (L + 0.7) / (LV + 0.3);
+      var rad = R0 * Math.pow(1 - t, 0.95);
+      var y = -TH / 2 + t * TH;
+      for (var b = 0; b < BR; b++) {
+        var a0 = (b + (L % 2) * 0.5) / BR * TAU + rnd(-0.04, 0.04);
+        var n = 1 + Math.round(rad * 2.4 + Math.random() * 1.4);
+        for (var k = 0; k < n; k++) {
+          var f = (k + 0.55) / n;
+          LIGHTS.push({
+            a: a0 + rnd(-0.05, 0.05),
+            r: rad * (0.16 + 0.94 * f) * rnd(0.94, 1.08),
+            y: y - rad * 0.36 * f * f + rnd(-0.02, 0.02),
+            s: rnd(2.1, 4.4),
+            c: SPK[(Math.random() * SPK.length) | 0],
+            ph: Math.random() * TAU,
+            sp: rnd(0.5, 1.8),
+            fl: Math.random() < 0.06,
+            fl2: Math.random() < 0.36
+          });
+        }
+      }
+    }
+    // 底部三层向外下垂的裙摆枝，让树底不是一团光
+    for (var sk = 0; sk < 2; sk++) {
+      var ts = 0.02 + sk * 0.05;
+      var radS = R0 * Math.pow(1 - ts, 0.95);
+      var ys = -TH / 2 + ts * TH;
+      for (var bs = 0; bs < BR; bs++) {
+        var aa = (bs / BR) * TAU + sk * 0.42 + rnd(-0.03, 0.03);
+        for (var ks = 0; ks < 2; ks++) {
+          var fs = 0.62 + ks * 0.34;
+          LIGHTS.push({
+            a: aa,
+            r: radS * (0.82 + 0.55 * fs),
+            y: ys - radS * 0.34 * fs * fs,
+            s: rnd(1.6, 2.9),
+            c: SPK[(Math.random() * SPK.length) | 0],
+            ph: Math.random() * TAU,
+            sp: rnd(0.5, 1.8),
+            fl: Math.random() < 0.06
+          });
+        }
+      }
+    }
+
+    var GN = small ? 300 : 470;
+    for (var i2 = 0; i2 < GN; i2++) {
+      var t2 = i2 / (GN - 1);
+      GAR.push({
+        t: t2,
+        a: t2 * TAU * 5.2,
+        r: R0 * Math.pow(1 - t2, 0.95) * 1.02,
+        y: -TH / 2 + t2 * TH,
+        s: rnd(3.0, 5.4),
+        ph: Math.random() * TAU,
+        sp: rnd(0.7, 1.5)
+      });
+    }
+    for (var i3 = 0; i3 < 36; i3++) {
+      var t3 = 0.05 + Math.random() * 0.88;
+      ORN.push({
+        t: t3,
+        a: Math.random() * TAU,
+        r: R0 * Math.pow(1 - t3, 0.95) * 1.02,
+        y: -TH / 2 + t3 * TH,
+        s: rnd(11, 22),
+        ph: Math.random() * TAU,
+        sp: rnd(0.4, 0.9),
+        c: ['rose', 'gold', 'lav', 'cream'][(Math.random() * 4) | 0]
+      });
+    }
+  }
+
+  /* ================= 尺寸 ================= */
+  function resize() {
+    W = Math.max(320, window.innerWidth);
+    H = Math.max(320, window.innerHeight);
+    small = W < 720;
+    // 手机给到 3 倍像素密度，画面才不糊；再用像素预算兜住性能
+    var want = Math.min(small ? 3.5 : 3, window.devicePixelRatio || 1);
+    var budget = small ? 4.4e6 : 8.3e6;      // 手机尽量贴着原生分辨率，桌面到 4K
+    while (want > 1.2 && W * H * want * want > budget) want -= 0.25;
+    DPR = want;
+    huge = (W * DPR * H * DPR) > 5.0e6;      // 超清时关掉最贵的两层
+
+    var cs = [cv, scn, tcv];
+    for (var k = 0; k < 3; k++) {
+      cs[k].width = Math.round(W * DPR);
+      cs[k].height = Math.round(H * DPR);
+    }
+    var bdiv = small ? 8 : 5;
+    bcv.width = Math.max(48, Math.round(W * DPR / bdiv));
+    bcv.height = Math.max(48, Math.round(H * DPR / bdiv));
+    cv.style.width = W + 'px';
+    cv.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    sctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    tctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+    // 按最终机位自动拟合：树 + 顶星整体居中，并留出边距
+    var cosE = Math.cos(VIEW_EL), sinE = Math.sin(VIEW_EL), LK = FINAL.look;
+    function prj(y) {
+      var yy = y - LK;
+      var y2 = yy * cosE;
+      var z2 = yy * sinE;
+      var d = Math.max(1.2, z2 + CAM);
+      return { y: -y2 * CAM / d, k: CAM / d };
+    }
+    var ps = prj(TH / 2 + 0.22), pb = prj(-TH / 2);
+    var span = Math.max(0.2, pb.y - ps.y);
+    var halfW = R0 * pb.k;
+    SBASE = Math.min((W * 0.78) / (2 * halfW), (H * 0.74) / span);
+    CX = W * 0.5;
+    CY = H * 0.5 - (ps.y + pb.y) * 0.5 * SBASE;
+
+    buildCache();
+    buildGrain();
+    buildTree();
+    buildRomance();
+    buildEmbers();
+    buildFlies();
+    buildPearls();
+    buildTreeBits();
+    buildFStars();
+    buildCode();
+    buildSnow();
+    buildStars();
+    buildBokeh();
+  }
+
+  /* 胶片颗粒：最后一层质感 */
+  var grainCv = null, grainPat = null;
+  function buildGrain() {
+    var n = 128;
+    grainCv = document.createElement('canvas');
+    grainCv.width = grainCv.height = n;
+    var g = grainCv.getContext('2d');
+    var img = g.createImageData(n, n);
+    var d = img.data;
+    for (var i = 0; i < d.length; i += 4) {
+      var v = 112 + Math.random() * 88;
+      d[i] = v; d[i + 1] = v; d[i + 2] = v; d[i + 3] = 255;
+    }
+    g.putImageData(img, 0, 0);
+    grainPat = ctx.createPattern(grainCv, 'repeat');
+  }
+
+  function buildCache() {
+    G.bg = sctx.createLinearGradient(0, 0, 0, H);
+    G.bg.addColorStop(0, '#03030a');
+    G.bg.addColorStop(0.3, '#06060e');
+    G.bg.addColorStop(0.62, '#0b0a12');
+    G.bg.addColorStop(0.86, '#100e15');
+    G.bg.addColorStop(1, '#150f16');
+
+    G.warm = sctx.createRadialGradient(CX, H * 0.56, 0, CX, H * 0.56, Math.max(W, H) * 0.62);
+    G.warm.addColorStop(0, 'rgba(255,158,120,0.10)');
+    G.warm.addColorStop(0.42, 'rgba(220,130,150,0.055)');
+    G.warm.addColorStop(1, 'rgba(0,0,0,0)');
+
+    G.ground = sctx.createRadialGradient(CX, H * 0.94, 0, CX, H * 0.94, W * 0.6);
+    G.ground.addColorStop(0, 'rgba(255,158,120,0.11)');
+    G.ground.addColorStop(0.4, 'rgba(226,120,140,0.08)');
+    G.ground.addColorStop(1, 'rgba(0,0,0,0)');
+  }
+
+  /* 六芒雪花晶体贴图 */
+  function makeCrystal(seed) {
+    var n = 160, c = document.createElement('canvas');
+    c.width = c.height = n;
+    var g = c.getContext('2d');
+    var cx = n / 2, R = n * 0.41;
+    g.translate(cx, cx);
+    g.lineCap = 'round';
+    g.lineJoin = 'round';
+    var levels = seed % 3 === 0 ? [0.42, 0.66, 0.86] : (seed % 3 === 1 ? [0.5, 0.78] : [0.36, 0.62, 0.84]);
+    for (var i = 0; i < 6; i++) {
+      g.save();
+      g.rotate(i * TAU / 6 + seed * 0.18);
+      g.strokeStyle = 'rgba(255,255,255,0.95)';
+      g.lineWidth = 2.3;
+      g.beginPath();
+      g.moveTo(0, 0);
+      g.lineTo(0, -R);
+      g.stroke();
+      for (var k = 0; k < levels.length; k++) {
+        var y = -R * levels[k];
+        var len = R * (0.32 - k * 0.075);
+        g.lineWidth = 1.5;
+        g.strokeStyle = 'rgba(255,246,240,0.85)';
+        g.beginPath(); g.moveTo(0, y); g.lineTo(len * 0.9, y - len * 0.7); g.stroke();
+        g.beginPath(); g.moveTo(0, y); g.lineTo(-len * 0.9, y - len * 0.7); g.stroke();
+      }
+      g.restore();
+    }
+    g.strokeStyle = 'rgba(255,255,255,0.9)';
+    g.lineWidth = 1.6;
+    g.beginPath();
+    g.arc(0, 0, R * 0.12, 0, TAU);
+    g.stroke();
+    return c;
+  }
+  var CRY = [makeCrystal(0), makeCrystal(1), makeCrystal(2)];
+
+  function buildSnow() {
+    snow = [];
+    var n = small ? 110 : 430;
+    for (var k = 0; k < n; k++) {
+      var dep = Math.random();
+      var big = dep > 0.82;
+      snow.push({
+        x: Math.random() * W, y: Math.random() * H, dep: dep, big: big,
+        r: big ? 3.0 + Math.random() * 2.8 : 0.8 + dep * 2.4,
+        vy: big ? 7 + dep * 12 : 12 + dep * 46,
+        sw: rnd(0.2, 0.95), amp: rnd(8, 42),
+        ph: Math.random() * TAU,
+        a: big ? 0.14 + Math.random() * 0.16 : 0.52 + dep * 0.45,
+        cry: Math.random() < 0.62 ? CRY[(Math.random() * 3) | 0] : null,
+        rot: Math.random() * TAU,
+        vr: rnd(-0.55, 0.55),
+        spr: big ? SP.cream : (Math.random() < 0.3 ? SP.rose : SP.cream)
+      });
+    }
+  }
+
+  function buildStars() {
+    stars = [];
+    var n = small ? 80 : 170;
+    for (var k = 0; k < n; k++) {
+      stars.push({
+        x: Math.random() * W, y: Math.random() * H * 0.66,
+        r: rnd(0.35, 1.3), ph: Math.random() * TAU,
+        sp: rnd(0.2, 1.0), a: rnd(0.1, 0.45)
+      });
+    }
+  }
+
+  function buildBokeh() {
+    bokeh = []; fg = [];
+    var n = small ? 14 : 26;
+    for (var k = 0; k < n; k++) {
+      bokeh.push({
+        x: Math.random() * W, y: Math.random() * H,
+        r: rnd(30, 120) * (small ? 0.7 : 1),
+        a: rnd(0.03, 0.085),
+        spr: [SP.rose, SP.gold, SP.lav, SP.cream][(Math.random() * 4) | 0],
+        sp: rnd(0.05, 0.2), ph: Math.random() * TAU, dx: rnd(-5, 5)
+      });
+    }
+    var m = small ? 5 : 9;
+    for (var j = 0; j < m; j++) {
+      fg.push({
+        x: Math.random() * W, y: Math.random() * H,
+        r: rnd(70, 190) * (small ? 0.6 : 1),
+        a: rnd(0.035, 0.075),
+        spr: [SP.cream, SP.rose, SP.gold][(Math.random() * 3) | 0],
+        sp: rnd(0.04, 0.14), ph: Math.random() * TAU
+      });
+    }
+  }
+
+  /* ================= 投影 ================= */
+  var P_ = { x: 0, y: 0, k: 1, z: 0 };
+  function P(x, y, z, out) {
+    var yy = y - cam.look;
+    var y2 = yy * PC - z * PS;
+    var z2 = yy * PS + z * PC;
+    var d = z2 + CAM;
+    if (d < 0.9) d = 0.9;
+    var k = S * CAM / d;
+    out.x = CX + x * k;
+    out.y = CY - y2 * k;
+    out.k = k;
+    out.z = z2;
+    return out;
+  }
+
+  function visY(y) {
+    var t = (y + TH / 2) / TH;
+    if (t > growT) return 0;
+    return clamp((growT - t) / 0.05, 0, 1);
+  }
+
+  /* ================= 树 ================= */
+  /* 圆锥体积：一叠柔化椭圆堆出实体锥体，而不是一个平三角 */
+  /* 树心内发光：纯渐变，不加细节，避免繁琐 */
+  function drawInnerCore(g) {
+    if (growT <= 0.03) return;
+    var p = P(0, -0.18, 0, { x: 0, y: 0, k: 0, z: 0 });
+    var r = S * 1.05 * (0.5 + 0.5 * growT);
+    g.save();
+    g.translate(p.x, p.y);
+    g.scale(1, 0.82);
+    var grd = g.createRadialGradient(0, 0, 0, 0, 0, r);
+    grd.addColorStop(0, 'rgba(255,216,184,0.17)');
+    grd.addColorStop(0.42, 'rgba(255,188,168,0.10)');
+    grd.addColorStop(0.75, 'rgba(226,164,180,0.042)');
+    grd.addColorStop(1, 'rgba(200,160,190,0)');
+    g.fillStyle = grd;
+    g.beginPath();
+    g.arc(0, 0, r, 0, TAU);
+    g.fill();
+    g.restore();
+  }
+
+  function drawConeBody(g) {
+    if (growT <= 0.02) return;
+    var N = 16, p = { x: 0, y: 0, k: 0, z: 0 }, q = { x: 0, y: 0, k: 0, z: 0 };
+    for (var i = 0; i < N; i++) {
+      var t = (i + 0.5) / N;
+      if (t > growT) break;
+      var y = -TH / 2 + t * TH;
+      var r = R0 * Math.pow(1 - t, 0.95) * 1.02;
+      P(0, y, 0, p);
+      var cx0 = p.x, cy0 = p.y;
+      P(r, y, 0, q); var xr = Math.abs(q.x - cx0);
+      P(0, y, r, q); var yr = Math.abs(q.y - cy0);
+      if (xr < 1.5 || yr < 0.6) continue;
+      var al = 0.034 * (1 - t * 0.32);
+      g.save();
+      g.translate(cx0, cy0);
+      g.scale(1, yr / xr);
+      var grd = g.createRadialGradient(0, 0, 0, 0, 0, xr);
+      grd.addColorStop(0, 'rgba(230,200,162,' + (al * 0.5).toFixed(3) + ')');
+      grd.addColorStop(0.6, 'rgba(206,170,166,' + (al * 0.42).toFixed(3) + ')');
+      grd.addColorStop(0.9, 'rgba(190,156,180,' + al.toFixed(3) + ')');
+      grd.addColorStop(1, 'rgba(190,156,180,0)');
+      g.fillStyle = grd;
+      g.beginPath();
+      g.arc(0, 0, xr, 0, TAU);
+      g.fill();
+      g.restore();
+    }
+  }
+
+  /* 树底柔光：只是一片落在地上的暖光，不再是个圈 */
+  function drawBaseRim(g) {
+    var v = visY(-TH / 2);
+    if (v <= 0) return;
+    var p = P(0, -TH / 2 - 0.01, 0, { x: 0, y: 0, k: 0, z: 0 });
+    var rx = R0 * p.k * 1.5;
+    g.save();
+    g.translate(p.x, p.y);
+    g.scale(1, 0.36);
+    var grd = g.createRadialGradient(0, 0, 0, 0, 0, rx);
+    grd.addColorStop(0, 'rgba(240,206,162,' + (0.20 * v).toFixed(3) + ')');
+    grd.addColorStop(0.42, 'rgba(220,172,156,' + (0.10 * v).toFixed(3) + ')');
+    grd.addColorStop(1, 'rgba(206,154,168,0)');
+    g.fillStyle = grd;
+    g.beginPath();
+    g.arc(0, 0, rx, 0, TAU);
+    g.fill();
+    g.restore();
+  }
+
+  /* 从树底盘旋升起的光尘 */
+  var EMB = [];
+  function spawnEmber(initial) {
+    var a = Math.random() * TAU;
+    return {
+      a: a,
+      r: R0 * (0.35 + Math.random() * 0.7),
+      y: -TH / 2 + (initial ? Math.random() * 1.3 : -0.02),
+      vy: 0.14 + Math.random() * 0.3,
+      s: 1.1 + Math.random() * 2.0,
+      ph: Math.random() * TAU,
+      sp: 0.6 + Math.random() * 1.5
+    };
+  }
+  function buildEmbers() {
+    EMB = [];
+    var n = small ? 20 : 38;
+    for (var i = 0; i < n; i++) EMB.push(spawnEmber(true));
+  }
+  function updateEmbers(dt) {
+    for (var i = 0; i < EMB.length; i++) {
+      var e = EMB[i];
+      e.y += e.vy * dt;
+      e.a += dt * 0.05;
+      if (e.y > TH / 2 + 0.04) EMB[i] = spawnEmber(false);
+    }
+  }
+  function drawEmbers(g) {
+    var p = { x: 0, y: 0, k: 0, z: 0 };
+    for (var i = 0; i < EMB.length; i++) {
+      var e = EMB[i];
+      var h = (e.y + TH / 2) / TH;
+      var al = (1 - h * 0.85) * (0.30 + 0.30 * Math.sin(time * e.sp * 2.2 + e.ph));
+      if (al <= 0.012) continue;
+      P(e.r * Math.cos(e.a + ROT), e.y, e.r * Math.sin(e.a + ROT), p);
+      var rad = e.s * (p.k / S) * 2.1;
+      g.globalAlpha = clamp(al, 0, 1);
+      g.drawImage(i % 5 === 0 ? SP.cream : SP.gold, p.x - rad, p.y - rad, rad * 2, rad * 2);
+    }
+    g.globalAlpha = 1;
+  }
+
+  /* ================= 萤火 / 流星 ================= */
+  var FLYF = [], METS = [], metNext = 2.5;
+  function buildFlies() {
+    FLYF = [];
+    var n = small ? 8 : 15;
+    for (var i = 0; i < n; i++) {
+      FLYF.push({
+        a: Math.random() * TAU,
+        r: R0 * (1.02 + Math.random() * 0.75),
+        y: -TH / 2 + Math.random() * TH * 1.18,
+        ph: Math.random() * TAU,
+        sp: 0.22 + Math.random() * 0.45,
+        s: 1.5 + Math.random() * 2.3
+      });
+    }
+  }
+  function drawFlies(g) {
+    var p = { x: 0, y: 0, k: 0, z: 0 };
+    for (var i = 0; i < FLYF.length; i++) {
+      var f2 = FLYF[i];
+      var a = f2.a + Math.sin(time * f2.sp + f2.ph) * 0.4;
+      var y = f2.y + Math.sin(time * f2.sp * 1.3 + f2.ph * 2) * 0.09;
+      P(f2.r * Math.cos(a + ROT), y, f2.r * Math.sin(a + ROT), p);
+      var blink = 0.2 + 0.8 * Math.pow(Math.max(0, Math.sin(time * f2.sp * 2.1 + f2.ph)), 2);
+      var rad = f2.s * (p.k / S) * 2.0;
+      g.globalAlpha = clamp(blink, 0, 1);
+      g.drawImage(i % 4 === 0 ? SP.gold : SP.cream, p.x - rad, p.y - rad, rad * 2, rad * 2);
+    }
+    g.globalAlpha = 1;
+  }
+  function updateMeteor(dt) {
+    metNext -= dt;
+    if (metNext <= 0 && METS.length < 4) {
+      metNext = 2.6 + Math.random() * 4.2;
+      METS.push({
+        x: W * (0.12 + Math.random() * 0.76),
+        y: H * (0.02 + Math.random() * 0.18),
+        vx: -220 - Math.random() * 260,
+        vy: 105 + Math.random() * 90,
+        life: 1
+      });
+    }
+    for (var i = METS.length - 1; i >= 0; i--) {
+      var m = METS[i];
+      m.x += m.vx * dt;
+      m.y += m.vy * dt;
+      m.life -= dt * 0.85;
+      if (m.life <= 0 || m.x < -120 || m.y > H * 0.92) METS.splice(i, 1);
+    }
+  }
+  function drawMeteor() {
+    if (!METS.length) return;
+    sctx.save();
+    sctx.globalCompositeOperation = 'lighter';
+    for (var i = 0; i < METS.length; i++) {
+      var m = METS[i];
+      var al = Math.max(0, Math.min(1, m.life));
+      var tx = m.x - m.vx * 0.16, ty = m.y - m.vy * 0.16;
+      var g = sctx.createLinearGradient(m.x, m.y, tx, ty);
+      g.addColorStop(0, 'rgba(255,248,236,' + (0.95 * al).toFixed(3) + ')');
+      g.addColorStop(0.35, 'rgba(255,214,196,' + (0.45 * al).toFixed(3) + ')');
+      g.addColorStop(1, 'rgba(255,190,180,0)');
+      sctx.strokeStyle = g;
+      sctx.lineWidth = 1.8;
+      sctx.beginPath();
+      sctx.moveTo(m.x, m.y);
+      sctx.lineTo(tx, ty);
+      sctx.stroke();
+      sctx.fillStyle = 'rgba(255,252,244,' + (0.95 * al).toFixed(3) + ')';
+      sctx.beginPath();
+      sctx.arc(m.x, m.y, 1.6, 0, TAU);
+      sctx.fill();
+    }
+    sctx.restore();
+  }
+
+  /* 专属徽记：挂在树上的金属吊牌 */
+  function makeSeal(text) {
+    var n = 256, c = document.createElement('canvas');
+    c.width = c.height = n;
+    var g = c.getContext('2d');
+    var cx = n / 2, cy = n / 2, R = n * 0.36;
+    var grd = g.createRadialGradient(cx, cy, R * 0.15, cx, cy, R);
+    grd.addColorStop(0, 'rgba(255,232,200,0.22)');
+    grd.addColorStop(0.72, 'rgba(255,208,172,0.10)');
+    grd.addColorStop(1, 'rgba(255,200,170,0)');
+    g.fillStyle = grd;
+    g.beginPath(); g.arc(cx, cy, R, 0, TAU); g.fill();
+    g.strokeStyle = 'rgba(255,234,208,0.88)';
+    g.lineWidth = 3;
+    g.beginPath(); g.arc(cx, cy, R * 0.94, 0, TAU); g.stroke();
+    g.strokeStyle = 'rgba(255,234,208,0.42)';
+    g.lineWidth = 1.4;
+    g.beginPath(); g.arc(cx, cy, R * 0.79, 0, TAU); g.stroke();
+    g.font = '600 ' + Math.round(n * 0.29) + 'px Georgia, "Playfair Display", "Songti SC", serif';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillStyle = 'rgba(255,246,232,0.96)';
+    g.fillText(text, cx, cy + n * 0.014);
+    return c;
+  }
+  var SEAL = makeSeal(PERS.mono);
+
+  function drawSeal(g) {
+    var v = visY(-TH / 2 + 0.55 * TH);
+    if (v <= 0) return;
+    var a = 0.55 + Math.sin(time * 0.85) * 0.05;
+    var p = { x: 0, y: 0, k: 0, z: 0 }, tp = { x: 0, y: 0, k: 0, z: 0 };
+    P(R0 * 0.78 * Math.cos(a + ROT), -TH / 2 + 0.82 * TH, R0 * 0.78 * Math.sin(a + ROT), tp);
+    P(R0 * 0.9 * Math.cos(a + ROT), -TH / 2 + 0.52 * TH, R0 * 0.9 * Math.sin(a + ROT), p);
+    var sz = S * 0.13 * (p.k / S) * v;
+    g.globalAlpha = 0.9 * v;
+    g.strokeStyle = 'rgba(255,228,198,0.55)';
+    g.lineWidth = 1;
+    g.beginPath();
+    g.moveTo(tp.x, tp.y);
+    g.lineTo(p.x, p.y);
+    g.stroke();
+    g.drawImage(SEAL, p.x - sz, p.y - sz, sz * 2, sz * 2);
+    g.globalAlpha = 1;
+  }
+
+  /* ================= 树内新增：星形挂件 + 流苏冰凌 ================= */
+  function makeStarOrn(rgb) {
+    var n = 144, c = document.createElement('canvas');
+    c.width = c.height = n;
+    var g = c.getContext('2d');
+    var cx = n / 2, R = n * 0.42, r = R * 0.44;
+    g.translate(cx, cx);
+    var grd = g.createRadialGradient(0, 0, 0, 0, 0, R);
+    grd.addColorStop(0, 'rgba(255,250,236,0.95)');
+    grd.addColorStop(0.5, 'rgba(' + rgb + ',0.8)');
+    grd.addColorStop(1, 'rgba(' + rgb + ',0.06)');
+    g.fillStyle = grd;
+    g.beginPath();
+    for (var i = 0; i < 10; i++) {
+      var ang = -Math.PI / 2 + i * Math.PI / 5;
+      var rad = (i % 2 === 0) ? R : r;
+      var x = Math.cos(ang) * rad, y = Math.sin(ang) * rad;
+      if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
+    }
+    g.closePath();
+    g.fill();
+    return c;
+  }
+  function makeIcicle(rgb) {
+    var w = 20, h = 110, c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    var g = c.getContext('2d');
+    var grd = g.createLinearGradient(0, 0, 0, h);
+    grd.addColorStop(0, 'rgba(' + rgb + ',0.85)');
+    grd.addColorStop(0.55, 'rgba(' + rgb + ',0.3)');
+    grd.addColorStop(1, 'rgba(' + rgb + ',0)');
+    g.fillStyle = grd;
+    g.beginPath();
+    g.moveTo(w / 2 - 3.2, 0);
+    g.lineTo(w / 2 + 3.2, 0);
+    g.lineTo(w / 2, h);
+    g.closePath();
+    g.fill();
+    return c;
+  }
+  var STAR_ORN = [makeStarOrn('255,216,152'), makeStarOrn('255,238,208')];
+  var ICI_SPR = makeIcicle('255,234,204');
+  var STA = [], ICI = [];
+
+  function buildTreeBits() {
+    STA = []; ICI = [];
+    var nS = small ? 7 : 18;
+    for (var i = 0; i < nS; i++) {
+      var t = 0.08 + Math.random() * 0.76;
+      STA.push({
+        y: -TH / 2 + t * TH,
+        a: Math.random() * TAU,
+        r: R0 * Math.pow(1 - t, 0.95) * 1.05,
+        s: rnd(9, 17),
+        ph: Math.random() * TAU,
+        sp: rnd(0.5, 1.3),
+        spr: STAR_ORN[(Math.random() * 2) | 0]
+      });
+    }
+    var nI = small ? 9 : 24;
+    for (var j = 0; j < nI; j++) {
+      var t2 = 0.1 + Math.random() * 0.72;
+      ICI.push({
+        y: -TH / 2 + t2 * TH,
+        a: Math.random() * TAU,
+        r: R0 * Math.pow(1 - t2, 0.95) * 1.03,
+        len: rnd(24, 52),
+        ph: Math.random() * TAU
+      });
+    }
+  }
+
+  function drawTreeBits(g) {
+    var p = { x: 0, y: 0, k: 0, z: 0 }
+    var i, d, v;
+    for (i = 0; i < ICI.length; i++) {
+      d = ICI[i];
+      v = visY(d.y);
+      if (!v) continue;
+      P(d.r * Math.cos(d.a + ROT), d.y, d.r * Math.sin(d.a + ROT), p);
+      var len = d.len * (p.k / S) * v;
+      var w = len * 0.22;
+      g.globalAlpha = clamp(v * (0.30 + 0.22 * Math.sin(time * 1.2 + d.ph)), 0, 1);
+      g.drawImage(ICI_SPR, p.x - w, p.y, w * 2, len);
+    }
+    g.globalAlpha = 1;
+    for (i = 0; i < STA.length; i++) {
+      var s = STA[i];
+      v = visY(s.y);
+      if (!v) continue;
+      P(s.r * Math.cos(s.a + ROT), s.y, s.r * Math.sin(s.a + ROT), p);
+      var dep = 0.45 + 0.55 * clamp((p.z / R0 + 1) / 2, 0, 1);
+      var tw = 0.62 + 0.38 * Math.sin(time * s.sp * 1.7 + s.ph);
+      var rad = s.s * (p.k / S) * (0.7 + 0.5 * dep) * tw;
+      g.globalAlpha = clamp(v * (0.5 + 0.45 * dep) * tw, 0, 1);
+      g.drawImage(s.spr, p.x - rad, p.y - rad, rad * 2, rad * 2);
+    }
+    g.globalAlpha = 1;
+  }
+
+  /* 缠绕树体的光带 + 空中漂浮的小星星 */
+  function drawRibbon(g) {
+    if (growT < 0.35) return;
+    var n = 96, p = { x: 0, y: 0, k: 0, z: 0 };
+    g.beginPath();
+    for (var i = 0; i <= n; i++) {
+      var t = (i / n) * Math.min(1, growT);
+      var a = t * TAU * 2.2 + time * 0.22;
+      var r = R0 * Math.pow(1 - t, 0.95) * 1.06;
+      var y = -TH / 2 + t * TH;
+      P(r * Math.cos(a + ROT), y, r * Math.sin(a + ROT), p);
+      if (i === 0) g.moveTo(p.x, p.y); else g.lineTo(p.x, p.y);
+    }
+    g.strokeStyle = 'rgba(255,220,200,0.16)';
+    g.lineWidth = Math.max(1.4, S * 0.013);
+    g.stroke();
+    g.strokeStyle = 'rgba(255,200,186,0.07)';
+    g.lineWidth = Math.max(4, S * 0.055);
+    g.stroke();
+  }
+  var FSTAR = [];
+  function buildFStars() {
+    FSTAR = [];
+    var n = small ? 10 : 20;
+    for (var i = 0; i < n; i++) {
+      FSTAR.push({
+        x: Math.random() * W, y: Math.random() * H,
+        s: rnd(4, 9), ph: Math.random() * TAU, sp: rnd(0.25, 0.8),
+        vx: rnd(-6, 6), vy: rnd(-10, -2),
+        spr: STAR_ORN[(Math.random() * 2) | 0]
+      });
+    }
+  }
+  function updateFStars(dt) {
+    for (var i = 0; i < FSTAR.length; i++) {
+      var f2 = FSTAR[i];
+      f2.x += f2.vx * dt; f2.y += f2.vy * dt;
+      if (f2.y < -30) { f2.y = H + 20; f2.x = Math.random() * W; }
+      if (f2.x < -20) f2.x = W + 10; else if (f2.x > W + 20) f2.x = -10;
+    }
+  }
+  function drawFStars() {
+    sctx.save();
+    sctx.globalCompositeOperation = 'lighter';
+    for (var i = 0; i < FSTAR.length; i++) {
+      var f2 = FSTAR[i];
+      var tw = 0.35 + 0.65 * Math.abs(Math.sin(time * f2.sp + f2.ph));
+      var rad = f2.s * (0.75 + 0.35 * tw);
+      sctx.globalAlpha = 0.5 * tw;
+      sctx.drawImage(f2.spr, f2.x - rad, f2.y - rad, rad * 2, rad * 2);
+    }
+    sctx.restore();
+  }
+
+  function drawLights(g) {
+    var p = { x: 0, y: 0, k: 0, z: 0 };
+    for (var i = 0; i < LIGHTS.length; i += (quality >= 1 ? 1 : 2)) {
+      var L = LIGHTS[i];
+      var v = visY(L.y);
+      if (!v) continue;
+      P(L.r * Math.cos(L.a + ROT), L.y, L.r * Math.sin(L.a + ROT), p);
+      var tz = clamp((p.z / R0 + 1) / 2, 0, 1);
+      var dep = 0.22 + 0.78 * tz * tz;
+      var tw = 0.62 + 0.38 * Math.sin(time * L.sp + L.ph);
+      var lt = (L.y + TH / 2) / TH;
+      var nearF = 1 - Math.min(1, Math.abs(lt - growT) / 0.10);
+      var beam = Math.max(0, Math.cos(L.a + ROT - BUILD_ANG));
+      var boost = 1 + 1.5 * nearF * beam * beam * beam;
+      var rad = L.s * (p.k / S) * (0.6 + 0.6 * dep) * (0.82 + 0.28 * tw) * boost;
+      g.globalAlpha = clamp(v * (0.62 + 0.34 * dep) * (0.66 + 0.46 * tw) * boost, 0, 1);
+      g.drawImage(SP[L.c], p.x - rad, p.y - rad, rad * 2, rad * 2);
+      if (L.fl) {
+        var hr = rad * 3.8;
+        g.globalAlpha = clamp(v * 0.30 * (0.5 + 0.5 * tw), 0, 1);
+        g.drawImage(SP.white, p.x - hr, p.y - hr, hr * 2, hr * 2);
+        if (L.fl2) {
+          // 细十字：只给部分亮点，线更细、更短、更透
+          var fl = rad * 2.4;
+          g.globalAlpha = clamp(v * 0.42 * tw, 0, 1);
+          g.strokeStyle = 'rgba(255,248,238,0.55)';
+          g.lineWidth = 0.75;
+          g.beginPath();
+          g.moveTo(p.x - fl, p.y); g.lineTo(p.x + fl, p.y);
+          g.moveTo(p.x, p.y - fl); g.lineTo(p.x, p.y + fl);
+          g.stroke();
+        }
+      }
+    }
+    g.globalAlpha = 1;
+  }
+
+  function drawGarland(g) {
+    var p = { x: 0, y: 0, k: 0, z: 0 };
+    for (var i = 0; i < GAR.length; i++) {
+      var L = GAR[i];
+      var v = visY(L.y);
+      if (!v) continue;
+      P(L.r * Math.cos(L.a + ROT), L.y, L.r * Math.sin(L.a + ROT), p);
+      var dep = 0.42 + 0.58 * clamp((p.z / R0 + 1) / 2, 0, 1);
+      var tw = 0.72 + 0.28 * Math.sin(time * L.sp + L.ph);
+      var rad = L.s * (p.k / S) * (0.65 + 0.55 * dep) * tw * (0.8 + 0.35 * (1 - i / GAR.length));
+      g.globalAlpha = clamp(v * (0.9 + 0.3 * dep) * tw * (0.55 + 0.45 * (1 - i / GAR.length)), 0, 1);
+      g.drawImage(i % 9 === 0 ? SP.white : SP.gold, p.x - rad, p.y - rad, rad * 2, rad * 2);
+    }
+    g.globalAlpha = 1;
+  }
+
+  function drawOrn(g) {
+    var p = { x: 0, y: 0, k: 0, z: 0 };
+    for (var i = 0; i < ORN.length; i++) {
+      var o = ORN[i];
+      var v = visY(o.y);
+      if (!v) continue;
+      P(o.r * Math.cos(o.a + ROT), o.y, o.r * Math.sin(o.a + ROT), p);
+      var dep = 0.45 + 0.55 * clamp((p.z / R0 + 1) / 2, 0, 1);
+      var pulse = 0.55 + 0.45 * Math.sin(time * o.sp * 1.6 + o.ph);
+      var rad = o.s * (p.k / S) * (0.6 + 0.55 * dep) * (0.75 + 0.45 * pulse);
+      g.globalAlpha = clamp(v * (0.4 + 0.5 * dep) * (0.5 + 0.6 * pulse), 0, 1);
+      g.drawImage(SP[o.c], p.x - rad, p.y - rad, rad * 2, rad * 2);
+    }
+    g.globalAlpha = 1;
+  }
+
+  function drawStar(g) {
+    if (starPop <= 0) return;
+    var p = P(0, TH / 2 + 0.22, 0, { x: 0, y: 0, k: 0, z: 0 });
+    var pulse = 0.9 + 0.1 * Math.sin(time * 1.7);
+    var sc = S * 0.22 * pulse * starPop;
+    var hr = S * 0.44 * pulse * starPop;
+
+    g.globalAlpha = 0.5 * starPop;
+    g.drawImage(SP.gold, p.x - hr, p.y - hr, hr * 2, hr * 2);
+    var hr2 = S * 0.95 * pulse * starPop;
+    g.globalAlpha = 0.13 * starPop;
+    g.drawImage(SP.gold, p.x - hr2, p.y - hr2, hr2 * 2, hr2 * 2);
+    g.globalAlpha = 1;
+
+    g.save();
+    g.translate(p.x, p.y);
+    g.rotate(time * 0.26);
+    for (var k = 0; k < 8; k++) {
+      var ang = k * TAU / 8;
+      var len = (k % 2 === 0 ? 1 : 0.4) * sc;
+      g.beginPath();
+      g.moveTo(0, 0);
+      g.lineTo(Math.cos(ang) * len, Math.sin(ang) * len);
+      g.lineWidth = k % 2 === 0 ? 2.2 : 1.1;
+      g.strokeStyle = 'rgba(255,247,228,' + (k % 2 === 0 ? 0.9 : 0.5) * starPop + ')';
+      g.stroke();
+    }
+    g.restore();
+
+    var cr = S * 0.115 * pulse * starPop;
+    g.globalAlpha = 0.95 * starPop;
+    g.drawImage(SP.white, p.x - cr, p.y - cr, cr * 2, cr * 2);
+    g.globalAlpha = 1;
+  }
+
+  function drawFrontier(g) {
+    if (growT >= 1) return;
+    var t = clamp(growT, 0, 1);
+    var y = -TH / 2 + t * TH;
+    var r = R0 * Math.pow(1 - t, 0.95);
+    var p = P(0, y, 0, { x: 0, y: 0, k: 0, z: 0 });
+    var rad = Math.max(40, r * S * 1.5);
+    var grd = g.createRadialGradient(p.x, p.y, 0, p.x, p.y, rad);
+    grd.addColorStop(0, 'rgba(255,240,220,0.30)');
+    grd.addColorStop(0.45, 'rgba(255,200,170,0.12)');
+    grd.addColorStop(1, 'rgba(255,180,160,0)');
+    g.save();
+    g.translate(p.x, p.y);
+    g.scale(1, 0.42);
+    g.translate(-p.x, -p.y);
+    g.fillStyle = grd;
+    g.beginPath();
+    g.arc(p.x, p.y, rad, 0, TAU);
+    g.fill();
+    g.restore();
+
+    for (var k = 0; k < 22; k++) {
+      var a = k / 22 * TAU + time * 0.35;
+      var rr = r * (0.3 + 0.75 * ((k % 6) / 6));
+      P(rr * Math.cos(a + ROT), y + 0.04 + 0.28 * Math.abs(Math.sin(time * 1.2 + k)), rr * Math.sin(a + ROT), p);
+      var rd = (1.4 + 2.2 * Math.abs(Math.sin(time * 1.8 + k))) * (p.k / S);
+      g.globalAlpha = 0.2 + 0.4 * Math.abs(Math.sin(time * 1.5 + k));
+      g.drawImage(SP.cream, p.x - rd, p.y - rd, rd * 2, rd * 2);
+    }
+    g.globalAlpha = 1;
+  }
+
+  /* ================= 背光 + 深色树体，让"树"真正成形 ================= */
+  function drawBacklight() {
+    var p = P(0, 0.05, 0, { x: 0, y: 0, k: 0, z: 0 });
+    var r = S * 1.0;
+    var g = sctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
+    g.addColorStop(0, 'rgba(255,168,120,0.22)');
+    g.addColorStop(0.45, 'rgba(255,140,140,0.10)');
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    sctx.save();
+    sctx.globalCompositeOperation = 'lighter';
+    sctx.fillStyle = g;
+    sctx.beginPath();
+    sctx.arc(p.x, p.y, r, 0, TAU);
+    sctx.fill();
+    sctx.restore();
+  }
+
+  function drawSilhouette() {
+    if (growT <= 0.01) return;
+    var top = Math.min(1, growT);
+    var n = 16, lp = [], rp = [], p = { x: 0, y: 0, k: 0, z: 0 };
+    for (var i = 0; i <= n; i++) {
+      var t = (i / n) * top;
+      var y = -TH / 2 + t * TH;
+      var r = R0 * Math.pow(1 - t, 0.95) * 1.01;
+      P(-r, y, 0, p); lp.push({ x: p.x, y: p.y });
+      P(r, y, 0, p); rp.push({ x: p.x, y: p.y });
+    }
+    P(0, -TH / 2 + top * TH, 0, p);
+    var ax = p.x, ay = p.y;
+
+    sctx.save();
+    sctx.globalCompositeOperation = 'source-over';
+    sctx.filter = 'blur(' + Math.max(3, S * 0.055).toFixed(1) + 'px)';
+    sctx.beginPath();
+    sctx.moveTo(lp[0].x, lp[0].y);
+    for (var a = 1; a < lp.length; a++) sctx.lineTo(lp[a].x, lp[a].y);
+    sctx.lineTo(ax, ay - S * 0.02);
+    for (var b = rp.length - 1; b >= 0; b--) sctx.lineTo(rp[b].x, rp[b].y);
+    sctx.closePath();
+    sctx.fillStyle = 'rgba(9,4,8,0.95)';
+    sctx.fill();
+    sctx.restore();
+
+    sctx.save();
+    sctx.globalCompositeOperation = 'lighter';
+    sctx.beginPath();
+    sctx.moveTo(lp[0].x, lp[0].y);
+    for (var c = 1; c < lp.length; c++) sctx.lineTo(lp[c].x, lp[c].y);
+    sctx.lineTo(ax, ay - S * 0.02);
+    for (var d = rp.length - 1; d >= 0; d--) sctx.lineTo(rp[d].x, rp[d].y);
+    sctx.closePath();
+    sctx.strokeStyle = 'rgba(255,186,150,0.22)';
+    sctx.lineWidth = 1.6;
+    sctx.stroke();
+    sctx.restore();
+  }
+
+  function drawShadow() {
+    if (growT <= 0.05) return;
+    var pb = P(0, -TH / 2 - 0.02, 0, { x: 0, y: 0, k: 0, z: 0 });
+    var rx = R0 * S * 1.12, ry = rx * 0.34;
+    var g = sctx.createRadialGradient(pb.x, pb.y, 0, pb.x, pb.y, rx);
+    g.addColorStop(0, 'rgba(5,2,7,0.6)');
+    g.addColorStop(0.7, 'rgba(5,2,7,0.26)');
+    g.addColorStop(1, 'rgba(5,2,7,0)');
+    sctx.save();
+    sctx.globalCompositeOperation = 'source-over';
+    sctx.translate(pb.x, pb.y);
+    sctx.scale(1, ry / rx);
+    sctx.fillStyle = g;
+    sctx.beginPath();
+    sctx.arc(0, 0, rx, 0, TAU);
+    sctx.fill();
+    sctx.restore();
+  }
+
+  function drawTreeLayer() {
+    tctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    tctx.clearRect(0, 0, W, H);
+    tctx.globalCompositeOperation = 'lighter';
+    drawConeBody(tctx);
+    drawInnerCore(tctx);
+    drawBaseRim(tctx);
+    drawLights(tctx);
+    drawGarland(tctx);
+    drawPearls(tctx);
+    drawTreeBits(tctx);
+    drawRibbon(tctx);
+    drawTreeBubbles(tctx);
+    drawEmbers(tctx);
+    drawFlies(tctx);
+    drawSeal(tctx);
+    drawOrn(tctx);
+    drawFrontier(tctx);
+    drawStar(tctx);
+    tctx.globalCompositeOperation = 'source-over';
+    tctx.globalAlpha = 1;
+  }
+
+  /* ================= 天空 ================= */
+  function drawMoon() {
+    var mx = W * 0.755, my = H * 0.16;
+    var mr = Math.min(W, H) * 0.05;
+    var g = sctx.createRadialGradient(mx, my, 0, mx, my, mr * 3.6);
+    g.addColorStop(0, 'rgba(255,246,236,0.14)');
+    g.addColorStop(0.18, 'rgba(255,232,214,0.10)');
+    g.addColorStop(0.5, 'rgba(255,206,190,0.03)');
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    sctx.fillStyle = g;
+    sctx.beginPath();
+    sctx.arc(mx, my, mr * 3.6, 0, TAU);
+    sctx.fill();
+
+    var d = sctx.createRadialGradient(mx - mr * 0.25, my - mr * 0.25, mr * 0.05, mx, my, mr);
+    d.addColorStop(0, 'rgba(255,253,246,0.26)');
+    d.addColorStop(0.7, 'rgba(255,244,230,0.2)');
+    d.addColorStop(1, 'rgba(255,232,212,0)');
+    sctx.fillStyle = d;
+    sctx.beginPath();
+    sctx.arc(mx, my, mr, 0, TAU);
+    sctx.fill();
+  }
+
+  function drawClouds() {
+    for (var i = 0; i < 4; i++) {
+      var cy = H * (0.12 + i * 0.05);
+      var ph = time * (0.02 + i * 0.008) + i * 1.7;
+      var cx = ((W * (0.15 + i * 0.24) + ph * W * 0.16) % (W * 1.5)) - W * 0.25;
+      var rx = W * (0.16 + i * 0.05), ry = H * (0.022 + i * 0.008);
+      var g = sctx.createRadialGradient(cx, cy, 0, cx, cy, rx);
+      g.addColorStop(0, 'rgba(255,214,206,' + (0.05 - i * 0.008).toFixed(3) + ')');
+      g.addColorStop(0.6, 'rgba(238,190,200,0.025)');
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      sctx.save();
+      sctx.translate(cx, cy);
+      sctx.scale(1, ry / rx);
+      sctx.translate(-cx, -cy);
+      sctx.fillStyle = g;
+      sctx.beginPath();
+      sctx.arc(cx, cy, rx, 0, TAU);
+      sctx.fill();
+      sctx.restore();
+    }
+  }
+
+  function drawBG() {
+    sctx.globalCompositeOperation = 'source-over';
+    sctx.globalAlpha = 1;
+    sctx.fillStyle = G.bg;
+    sctx.fillRect(0, 0, W, H);
+
+    sctx.globalCompositeOperation = 'lighter';
+    sctx.fillStyle = G.warm;
+    sctx.fillRect(0, 0, W, H);
+
+    drawMoon();
+    drawClouds();
+
+    for (var k = 0; k < stars.length; k++) {
+      var s = stars[k];
+      sctx.globalAlpha = Math.max(0, s.a * (0.35 + 0.65 * Math.sin(time * s.sp + s.ph)));
+      sctx.fillStyle = '#ffe9df';
+      sctx.fillRect(s.x, s.y, s.r, s.r);
+    }
+
+    for (k = 0; k < bokeh.length; k++) {
+      var b = bokeh[k];
+      var bx = b.x + Math.sin(time * b.sp + b.ph) * 26 + b.dx * time * 0.25;
+      var by = b.y + Math.cos(time * b.sp * 0.7 + b.ph) * 20;
+      sctx.globalAlpha = b.a * (0.55 + 0.45 * Math.sin(time * 0.4 + b.ph));
+      sctx.drawImage(b.spr, bx - b.r, by - b.r, b.r * 2, b.r * 2);
+    }
+    sctx.globalAlpha = 1;
+    sctx.globalCompositeOperation = 'source-over';
+  }
+
+  /* 前景虚焦光斑（镜头感） */
+  function drawForeground() {
+    sctx.save();
+    sctx.globalCompositeOperation = 'lighter';
+    for (var k = 0; k < fg.length; k++) {
+      var b = fg[k];
+      var bx = b.x + Math.sin(time * b.sp + b.ph) * 30;
+      var by = b.y + Math.cos(time * b.sp * 0.6 + b.ph) * 24;
+      sctx.globalAlpha = b.a * (0.5 + 0.5 * Math.sin(time * 0.35 + b.ph));
+      sctx.drawImage(b.spr, bx - b.r, by - b.r, b.r * 2, b.r * 2);
+    }
+    sctx.restore();
+  }
+
+  /* ================= 辉光 ================= */
+  function bloom() {
+    bctx.setTransform(1, 0, 0, 1, 0, 0);
+    bctx.clearRect(0, 0, bcv.width, bcv.height);
+    bctx.filter = 'blur(6px)';
+    bctx.drawImage(tcv, 0, 0, bcv.width, bcv.height);
+    bctx.filter = 'none';
+
+    sctx.save();
+    sctx.globalCompositeOperation = 'lighter';
+    sctx.globalAlpha = 0.30;
+    sctx.drawImage(bcv, 0, 0, W, H);
+    if (!small && quality >= 2 && !huge) {
+      sctx.globalAlpha = 0.11;
+      sctx.drawImage(bcv, -W * 0.08, -H * 0.08, W * 1.16, H * 1.16);
+    }
+    sctx.restore();
+  }
+
+  function drawTree() {
+    sctx.globalCompositeOperation = 'lighter';
+    sctx.globalAlpha = 1;
+    sctx.drawImage(tcv, 0, 0, W, H);
+    sctx.globalCompositeOperation = 'source-over';
+    bloom();
+  }
+
+  function drawReflection() {
+    var a = 0.16 * clamp(1 - cam.el / 0.8, 0, 1);
+    if (a <= 0.004) return;
+    var pB = P(0, -TH / 2, 0, { x: 0, y: 0, k: 0, z: 0 });
+    var by = pB.y;
+    if (by <= 0 || by >= H) return;
+    sctx.save();
+    sctx.globalCompositeOperation = 'lighter';
+    sctx.globalAlpha = a;
+    sctx.translate(0, by * 2);
+    sctx.scale(1, -1);
+    sctx.drawImage(tcv, 0, 0, W, H);
+    sctx.restore();
+    var fd = sctx.createLinearGradient(0, by, 0, by + H * 0.28);
+    fd.addColorStop(0, 'rgba(22,11,18,0)');
+    fd.addColorStop(1, 'rgba(22,11,18,0.94)');
+    sctx.globalCompositeOperation = 'source-over';
+    sctx.fillStyle = fd;
+    sctx.fillRect(0, by, W, H * 0.28);
+  }
+
+  function drawGround() {
+    sctx.save();
+    sctx.globalCompositeOperation = 'lighter';
+    sctx.fillStyle = G.ground;
+    sctx.fillRect(0, 0, W, H);
+    sctx.restore();
+  }
+
+  function updateSnow(dt) {
+    for (var k = 0; k < snow.length; k++) {
+      var s = snow[k];
+      s.y += s.vy * dt;
+      s.rot += s.vr * dt;
+      if (s.y > H + 24) { s.y = -24; s.x = Math.random() * W; s.rot = Math.random() * TAU; }
+    }
+  }
+
+  function drawSnow() {
+    sctx.save();
+    sctx.globalCompositeOperation = 'source-over';
+    for (var k = 0; k < snow.length; k += (quality >= 1 ? 1 : 2)) {
+      var s = snow[k];
+      var sx = s.x + Math.sin(time * s.sw + s.ph) * s.amp;
+      var al = Math.max(0, s.a * (0.6 + 0.4 * Math.sin(time * 1.0 + s.ph)));
+      sctx.globalAlpha = al;
+      if (s.cry) {
+        var cr = s.r * (s.big ? 4.4 : 5.0);
+        sctx.save();
+        sctx.translate(sx, s.y);
+        sctx.rotate(s.rot);
+        sctx.drawImage(s.cry, -cr, -cr, cr * 2, cr * 2);
+        sctx.restore();
+      } else {
+        var r = s.r * (s.big ? 2.9 : 3.3);
+        sctx.drawImage(s.spr, sx - r, s.y - r, r * 2, r * 2);
+      }
+    }
+    sctx.restore();
+  }
+
+  /* 爱心贴图 */
+  function makeHeart(rgb) {
+    var n = 72, c = document.createElement('canvas');
+    c.width = c.height = n;
+    var g = c.getContext('2d');
+    var cx = n / 2, cy = n / 2, s = n * 0.30;
+    var grd = g.createRadialGradient(cx, cy * 0.85, s * 0.15, cx, cy, s * 1.7);
+    grd.addColorStop(0, 'rgba(' + rgb + ',0.95)');
+    grd.addColorStop(0.5, 'rgba(' + rgb + ',0.55)');
+    grd.addColorStop(1, 'rgba(' + rgb + ',0)');
+    g.fillStyle = grd;
+    g.beginPath();
+    g.moveTo(cx, cy + s * 0.85);
+    g.bezierCurveTo(cx - s * 1.5, cy - s * 0.25, cx - s * 0.6, cy - s * 1.25, cx, cy - s * 0.38);
+    g.bezierCurveTo(cx + s * 0.6, cy - s * 1.25, cx + s * 1.5, cy - s * 0.25, cx, cy + s * 0.85);
+    g.closePath();
+    g.fill();
+    return c;
+  }
+  var HEART = [makeHeart('255,168,186'), makeHeart('255,206,178'), makeHeart('255,232,220')];
+
+  function burst(x, y) {
+    var n = small ? 16 : 26;
+    for (var k = 0; k < n; k++) {
+      var ang = Math.random() * TAU, sp = rnd(16, 118);
+      var heart = Math.random() < 0.72;
+      sparks.push({
+        x: x + rnd(-10, 10), y: y + rnd(-10, 10),
+        vx: Math.cos(ang) * sp * (heart ? 0.68 : 1),
+        vy: Math.sin(ang) * sp * 0.78 - (heart ? 24 : 16),
+        life: 1,
+        age: 0,
+        delay: heart ? rnd(0, 0.4) : 0,
+        dec: heart ? rnd(0.32, 0.52) : rnd(0.7, 1.3),
+        r: heart ? rnd(3.2, 6.2) : rnd(1.0, 2.8),
+        heart: heart,
+        rot: Math.random() * TAU,
+        vr: rnd(-0.85, 0.85),
+        spr: heart ? HEART[(Math.random() * HEART.length) | 0]
+                    : (Math.random() < 0.4 ? SP.cream : (Math.random() < 0.5 ? SP.rose : SP.gold))
+      });
+    }
+  }
+
+  function updateSparks(dt) {
+    for (var k = sparks.length - 1; k >= 0; k--) {
+      var p = sparks[k];
+      if (p.delay > 0) { p.delay -= dt; continue; }
+      p.age += dt;
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      p.vy += (p.heart ? -32 : 360) * dt;
+      p.vx *= (p.heart ? 0.972 : 0.98);
+      if (p.heart) p.rot += p.vr * dt;
+      p.life -= p.dec * dt;
+      if (p.life <= 0) sparks.splice(k, 1);
+    }
+  }
+
+  function drawSparks() {
+    if (!sparks.length) return;
+    sctx.save();
+    sctx.globalCompositeOperation = 'lighter';
+    for (var k = 0; k < sparks.length; k++) {
+      var p = sparks[k];
+      if (p.delay > 0) continue;
+      if (p.heart) {
+        var hrad = p.r * (0.75 + p.life * 0.45);
+        sctx.save();
+        sctx.translate(p.x, p.y);
+        sctx.rotate(p.rot);
+        sctx.globalAlpha = Math.max(0, Math.min(1, p.age * 3.2) * Math.min(1, p.life * 1.5));
+        sctx.drawImage(p.spr, -hrad, -hrad, hrad * 2, hrad * 2);
+        sctx.restore();
+      } else {
+        var r = p.r * (0.4 + p.life * 1.4);
+        sctx.globalAlpha = Math.max(0, Math.min(1, p.life));
+        sctx.drawImage(p.spr, p.x - r, p.y - r, r * 2, r * 2);
+      }
+    }
+    sctx.restore();
+  }
+
+  /* ================= 镜头 ================= */
+  function updateCamera(dt) {
+    if (dragging && time - lastMove > 3) { dragging = false; dragS = null; document.body.classList.remove('dragging'); }
+    if (!growDone) {
+      /* 生长过程本身就是运镜：一边往上长，视角一边抬到斜上方 */
+      var gk = smooth(clamp(growT, 0, 1));
+      var front = -TH / 2 + growT * TH * 0.92;
+      var recenter = smooth(clamp((growT - 0.5) / 0.5, 0, 1));
+      tgt.look = lerp(front, FINAL.look, recenter);
+      if (!userMoved) {
+        tgt.el = lerp(0.05, RISE_EL, gk);
+        tgt.zoom = lerp(1.20, FINAL.zoom, gk);
+        tgt.az = lerp(0.10, FINAL.az, gk);
+      }
+    } else {
+      settle = Math.min(1, settle + dt * 0.3);
+      if (!dragging) {
+        /* 8 秒没动过视角，就缓缓回到签名机位（俯视 35°） */
+        if (time - lastInput > 8) userMoved = false;
+        if (!userMoved) {
+          var back = Math.min(1, dt * (settle < 1 ? 3.6 : 1.1));
+          tgt.az += (FINAL.az - tgt.az) * back;
+          tgt.el += (FINAL.el - tgt.el) * back;
+          tgt.zoom += (FINAL.zoom - tgt.zoom) * back;
+          tgt.look += (FINAL.look - tgt.look) * back;
+        }
+      }
+    }
+
+    if (!dragging && !userMoved) { vel.az = 0; vel.el = 0; }
+
+    if (!dragging && (Math.abs(vel.az) > 0.0004 || Math.abs(vel.el) > 0.0004)) {
+      tgt.az += vel.az * dt;
+      tgt.el = clamp(tgt.el + vel.el * dt, EL_MIN, EL_MAX);
+      vel.az *= Math.pow(0.05, dt);
+      vel.el *= Math.pow(0.1, dt);
+    }
+    tgt.el = clamp(tgt.el, EL_MIN, EL_MAX);
+
+    var sm;
+    if (!growDone && !dragging) sm = 1;                      // 生长期间不过滤，3 秒准点到位
+    else sm = dragging ? Math.min(1, dt * 18) : Math.min(1, dt * 2.0);
+    cam.az += (tgt.az - cam.az) * sm;
+    cam.el += (tgt.el - cam.el) * sm;
+    cam.zoom += (tgt.zoom - cam.zoom) * sm;
+    cam.look += (tgt.look - cam.look) * sm;
+
+    ROT = cam.az + spin;
+    PC = Math.cos(cam.el);
+    PS = Math.sin(cam.el);
+    S = SBASE * cam.zoom;
+  }
+
+  /* ================= 主循环 ================= */
+  function frame(now) {
+    requestAnimationFrame(frame);
+    var dt = last ? Math.min(0.05, (now - last) / 1000) : 0.016;
+    last = now;
+    time += dt;
+    FRAMES++;
+    // 目标帧率跟着屏幕刷新率走（60Hz 冲 60，120Hz 冲 120）
+    if (rfN < 120) { rfSum += dt; rfN++; refresh = Math.max(30, Math.min(144, Math.round(rfN / rfSum))); }
+    fpsAvg = fpsAvg * 0.92 + (1 / dt) * 0.08;
+    var loT = refresh * 0.72, hiT = refresh * 0.90;
+    qHold -= dt;
+    resCd -= dt;
+    if (qHold <= 0) {
+      if (fpsAvg < loT && quality > 0) { quality--; qHold = 3; }
+      else if (fpsAvg > hiT && quality < 2) { quality++; qHold = 7; }
+    }
+    // 不再降分辨率（降分辨率会让雪花和细线发虚），只靠减少元素数量保帧
+
+    if (!document.hidden) growAcc += dt * 1000;
+    var gp = clamp(growAcc / GROW_MS, 0, 1);
+    growT = gp * gp * (3 - 2 * gp);
+    if (gp >= 1 && !growDone) {
+      growDone = true;
+      burst(CX, CY - (TH / 2) * S);
+    }
+    if (growDone) starPop = Math.min(1, starPop + dt * 1.6);
+    else if (gp > 0.92) starPop = (gp - 0.92) / 0.08;
+    else starPop = 0;
+
+    BUILD_ANG = growT * 3.6;
+    var spinTarget = growDone ? 0.11 : 1.05;
+    spinV += (spinTarget - spinV) * Math.min(1, dt * 0.6);
+    spin += spinV * dt;
+
+    updateCamera(dt);
+
+    drawTreeLayer();
+    drawBG();
+    drawBacklight();
+    drawShadow();
+    drawTree();
+    drawGround();
+    updateSnow(dt);
+    updateEmbers(dt);
+    updateFStars(dt);
+    updateMeteor(dt);
+    drawMeteor();
+    drawSnow();
+    drawFStars();
+    updateFloat(dt);
+    drawFloat(sctx);
+    drawForeground();
+    updateSparks(dt);
+    drawSparks();
+
+    // 代码流：三档速度（慢 14 / 中 24 / 快 34），跟随音乐段落切换，再叠一层次拍脉冲
+    var api = Music.api();
+    var beat = 0, tier = 0;
+    if (api.ctx === 'running' && api.on && api.startAt > 0) {
+      var mt = api.t - api.startAt;
+      if (mt >= 0) {
+        var loopT = mt % 60;
+        tier = loopT < 15 ? 0 : (loopT < 26 ? 1 : (loopT < 52 ? 2 : 0));
+        var bp = 60 / 128;
+        beat = Math.pow(1 - ((mt / bp) % 1), 3);
+        beat += Math.pow(1 - ((mt / (bp * 4)) % 1), 4) * 0.8;
+      }
+    }
+    var baseSpeed = [14, 24, 34][tier];
+    var wantSpeed = api.on ? baseSpeed * (1 + beat * 0.45) : 10;
+    codeSpeed += (wantSpeed - codeSpeed) * Math.min(1, dt * 4.5);
+
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.drawImage(scn, 0, 0, W, H);
+    // 轻调色：顶部冷、底部暖，soft-light 叠一层
+    var grade = ctx.createLinearGradient(0, 0, 0, H);
+    grade.addColorStop(0, 'rgba(76,102,164,0.17)');
+    grade.addColorStop(0.45, 'rgba(104,98,128,0.06)');
+    grade.addColorStop(1, 'rgba(255,194,150,0.10)');
+    ctx.save();
+    ctx.globalCompositeOperation = 'soft-light';
+    ctx.fillStyle = grade;
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+    if (grainPat && !small && quality >= 2 && !huge) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'overlay';
+      ctx.globalAlpha = 0.055;
+      ctx.translate(-((Math.random() * 128) | 0), -((Math.random() * 128) | 0));
+      ctx.fillStyle = grainPat;
+      ctx.fillRect(0, 0, W + 128, H + 128);
+      ctx.restore();
+    }
+    drawCode(dt);
+  }
+
+  /* ================= 交互 ================= */
+  var hintEl = $('hint');
+  function inUI(t) { return !!(t && t.closest && t.closest('#player,.replay')); }
+
+  function replay() {
+    growAcc = 0;
+    growDone = false;
+    starPop = 0;
+    settle = 0;
+    userMoved = false;
+    lastInput = 0;
+    spin = 0;
+    spinV = 1.05;
+    tgt.az = 0.10; tgt.el = 0.05; tgt.zoom = 1.20; tgt.look = -TH / 2;
+    cam.az = tgt.az; cam.el = tgt.el; cam.zoom = tgt.zoom; cam.look = tgt.look;
+    vel.az = 0; vel.el = 0;
+    sparks.length = 0;
+  }
+
+  $('replayBtn').addEventListener('click', function (e) {
+    e.stopPropagation();
+    replay();
+  });
+
+  function onDown(e) {
+    if (inUI(e.target)) return;
+    dragging = true;
+    lastInput = time;
+    lastMove = time;
+    document.body.classList.add('dragging');
+    dragS = { x: e.clientX, y: e.clientY, az: tgt.az, el: tgt.el, moved: 0 };
+    vel.az = 0; vel.el = 0;
+    if (hintEl) hintEl.classList.add('gone');
+  }
+  function onMove(e) {
+    if (!dragging || !dragS) return;
+    lastMove = time;
+    var dx = e.clientX - dragS.x, dy = e.clientY - dragS.y;
+    dragS.moved = Math.max(dragS.moved, Math.abs(dx) + Math.abs(dy));
+    // 只有真的拖动过才算用户接管，单击不应影响自动运镜
+    if (!userMoved && dragS.moved < 20) return;
+    if (!userMoved) { userMoved = true; lastInput = time; dragS.az = tgt.az; dragS.el = tgt.el; dragS.x = e.clientX; dragS.y = e.clientY; return; }
+    var nAz = dragS.az - (e.clientX - dragS.x) * 0.009;
+    var nEl = clamp(dragS.el + (e.clientY - dragS.y) * 0.006, EL_MIN, EL_MAX);
+    spinV = Math.min(2.8, spinV + Math.abs(nAz - tgt.az) * 0.5);
+    vel.az = (nAz - tgt.az) / 0.016;
+    vel.el = (nEl - tgt.el) / 0.016;
+    tgt.az = nAz;
+    tgt.el = nEl;
+  }
+  function onUp(e) {
+    if (inUI(e.target)) { dragging = false; return; }
+    if (dragging && dragS) {
+      var moved = Math.abs(e.clientX - dragS.x) + Math.abs(e.clientY - dragS.y);
+      if (moved < 6) burst(e.clientX, e.clientY);
+    }
+    dragging = false;
+    dragS = null;
+    lastInput = time;
+    document.body.classList.remove('dragging');
+    vel.az = clamp(vel.az, -4, 4);
+    vel.el = clamp(vel.el, -2, 2);
+  }
+
+  window.addEventListener('pointerdown', onDown, { passive: true });
+  window.addEventListener('pointermove', onMove, { passive: true });
+  window.addEventListener('pointerup', onUp, { passive: true });
+  window.addEventListener('pointercancel', function () { dragging = false; dragS = null; }, { passive: true });
+  window.addEventListener('resize', resize);
+  window.addEventListener('orientationchange', function () { setTimeout(resize, 140); });
+
+  /* ================= 音乐引擎 ================= */
+  var Music = (function () {
+    var A = null, master = null, dry = null, wet = null, conv = null;
+    var timer = null, nextT = 0, step = 0, track = 'hook', on = false, startedAt = 0;
+    var vol = 0.55, el = null;
+
+    var STEP = { bells: 0.32, piano: 0.46, synth: 0.40, hook: 0.1172 };
+    var noiseBuf = null;
+    var PATTERN = [0, 2, 4, 3, 2, 4, 1, 2];
+    var CHORDS = [
+      [45, 52, 57, 60, 64],
+      [41, 48, 53, 57, 60],
+      [48, 55, 60, 64, 67],
+      [43, 50, 55, 59, 62]
+    ];
+
+    function mtof(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+
+    function makeIR(dur, decay) {
+      var len = Math.floor(A.sampleRate * dur);
+      var buf = A.createBuffer(2, len, A.sampleRate);
+      for (var ch = 0; ch < 2; ch++) {
+        var d = buf.getChannelData(ch);
+        for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+      }
+      return buf;
+    }
+
+    function init() {
+      if (A) return true;
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return false;
+      try { A = new AC(); } catch (e) { return false; }
+      master = A.createGain();
+      master.gain.value = vol;
+      master.connect(A.destination);
+      dry = A.createGain(); dry.gain.value = 0.85; dry.connect(master);
+      noiseBuf = (function () {
+        var len = Math.floor(A.sampleRate * 0.5);
+        var b = A.createBuffer(1, len, A.sampleRate);
+        var d = b.getChannelData(0);
+        for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+        return b;
+      })();
+      try {
+        conv = A.createConvolver();
+        conv.buffer = makeIR(2.8, 2.4);
+        wet = A.createGain(); wet.gain.value = 0.5;
+        conv.connect(wet); wet.connect(master);
+      } catch (e) { conv = null; }
+      return true;
+    }
+
+    function voice(freq, t0, dur, amp, type, partials, pan, attack) {
+      var out = A.createGain();
+      var pn = A.createStereoPanner ? A.createStereoPanner() : null;
+      if (pn) { pn.pan.value = pan || 0; out.connect(pn); pn.connect(dry); if (conv) pn.connect(conv); }
+      else { out.connect(dry); if (conv) out.connect(conv); }
+      var atk = attack || 0.006;
+      for (var i = 0; i < partials.length; i++) {
+        var pr = partials[i];
+        var osc = A.createOscillator();
+        osc.type = type;
+        osc.frequency.value = freq * pr[0];
+        var g = A.createGain();
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(Math.max(0.0003, amp * pr[1]), t0 + atk);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+        osc.connect(g); g.connect(out);
+        osc.start(t0); osc.stop(t0 + dur + 0.06);
+      }
+    }
+
+    function kick(t0, amp) {
+      var o = A.createOscillator();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(130, t0);
+      o.frequency.exponentialRampToValueAtTime(44, t0 + 0.13);
+      var g = A.createGain();
+      g.gain.setValueAtTime(amp, t0);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.3);
+      o.connect(g); g.connect(dry);
+      o.start(t0); o.stop(t0 + 0.32);
+    }
+
+    function perc(t0, dur, amp, kind) {
+      if (!noiseBuf) return;
+      var src = A.createBufferSource();
+      src.buffer = noiseBuf;
+      var flt = A.createBiquadFilter();
+      flt.type = kind === 'hat' ? 'highpass' : 'bandpass';
+      flt.frequency.value = kind === 'hat' ? 7500 : 1900;
+      flt.Q.value = 1;
+      var g = A.createGain();
+      g.gain.setValueAtTime(amp, t0);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      src.connect(flt); flt.connect(g); g.connect(dry); if (conv) g.connect(conv);
+      src.start(t0); src.stop(t0 + dur + 0.02);
+    }
+
+    function scheduleHook(i, t0) {
+      var bar = Math.floor(i / 16) % 32;
+      var s = i % 16;
+      var ch = CHORDS[bar % 4];
+      var phase = bar < 8 ? 0 : (bar < 14 ? 1 : (bar < 28 ? 2 : 3));
+      var idx = PATTERN[s % 8] % ch.length;
+
+      if (s === 0 && phase < 3) {
+        for (var k = 0; k < 3; k++) {
+          voice(mtof(ch[k] + 12), t0, 4.4, 0.05 + phase * 0.012, 'triangle',
+            [[1, 1], [2, 0.2]], (k - 1) * 0.3, 0.5);
+        }
+      }
+      if (s === 0 && phase === 2 && bar === 14) kick(t0, 0.55);
+      if (phase >= 1 && s % 4 === 0) kick(t0, phase === 2 ? 0.5 : 0.3);
+      if (phase >= 2 && s % 2 === 0) perc(t0, 0.045, s % 4 === 2 ? 0.075 : 0.045, 'hat');
+      if (phase >= 2 && (s === 4 || s === 12)) perc(t0, 0.16, 0.14, 'snare');
+
+      if (phase >= 2 && s % 2 === 0) {
+        voice(mtof(ch[0] - 12), t0, 0.2, 0.1, 'sawtooth', [[1, 1]], 0, 0.006);
+      }
+      if (phase >= 1 && (phase < 2 ? s % 4 === 0 : true)) {
+        voice(mtof(ch[idx] + 24), t0, 0.5, phase >= 2 ? 0.075 : 0.05, 'triangle',
+          [[1, 1], [2, 0.25]], (Math.random() - 0.5) * 0.4, 0.006);
+      }
+      if (phase === 3 && s === 0) {
+        voice(mtof(ch[2] + 12), t0, 3.2, 0.07, 'sine', [[1, 1], [2.01, 0.3], [3, 0.1]], 0, 0.01);
+      }
+    }
+
+    function schedule(i, t0) {
+      var bar = Math.floor(i / 8) % 4;
+      var ch = CHORDS[bar];
+      var s = i % 8;
+      var k, idx;
+      if (track === 'bells') {
+        idx = PATTERN[s] % ch.length;
+        voice(mtof(ch[idx] + 12), t0, 2.2, 0.14, 'sine',
+          [[1, 1], [2.01, 0.3], [3.02, 0.13], [4.9, 0.05]], (Math.random() - 0.5) * 0.5);
+        if (s === 0) voice(mtof(ch[0] - 12), t0, 2.0, 0.09, 'sine', [[1, 1], [2, 0.18]], 0);
+      } else if (track === 'piano') {
+        if (s === 0) {
+          for (k = 0; k < 3; k++) voice(mtof(ch[k] + 12), t0 + k * 0.02, 2.7, 0.07, 'triangle',
+            [[1, 1], [2, 0.18], [3, 0.05]], (k - 1) * 0.35, 0.02);
+        }
+        if (s % 2 === 1 || s === 6) {
+          voice(mtof(ch[PATTERN[s] % ch.length] + 24), t0, 1.7, 0.06, 'triangle',
+            [[1, 1], [2, 0.22]], 0.22, 0.012);
+        }
+      } else {
+        if (s === 0) {
+          for (k = 0; k < 3; k++) voice(mtof(ch[k] + 12), t0, 3.8, 0.045, 'sawtooth',
+            [[1, 1], [1.006, 0.55]], (k - 1) * 0.3, 0.75);
+        }
+        voice(mtof(ch[PATTERN[s] % ch.length] + 12), t0, 1.3, 0.05, 'triangle',
+          [[1, 1], [2, 0.16]], 0.3, 0.012);
+      }
+    }
+
+    function tick() {
+      if (!on || !A) return;
+      var ahead = 0.4, dur = STEP[track] || 0.35;
+      var guard = 0;
+      while (nextT < A.currentTime + ahead && guard++ < 64) {
+        if (track === 'hook') scheduleHook(step, nextT); else schedule(step, nextT);
+        nextT += dur;
+        step++;
+      }
+    }
+
+    function start() {
+      if (!init()) return false;
+      if (A.state === 'suspended') A.resume();
+      if (el) { el.pause(); el = null; }
+      on = true; step = 0; nextT = A.currentTime + 0.12; startedAt = nextT;
+      if (timer) clearInterval(timer);
+      timer = setInterval(tick, 60);
+      tick();
+      return true;
+    }
+    function stop() {
+      on = false;
+      if (timer) { clearInterval(timer); timer = null; }
+    }
+    function setTrack(t) {
+      track = t;
+      if (on && A) { step = 0; nextT = A.currentTime + 0.06; }
+    }
+    function pause() {
+      on = false;
+      if (timer) { clearInterval(timer); timer = null; }
+      if (el) el.pause();
+      if (A && A.state === 'running') { try { A.suspend(); } catch (e) {} }
+    }
+    function resume() {
+      if (!init()) return false;
+      if (el) { var pr = el.play(); if (pr && pr.catch) pr.catch(function () {}); on = true; return true; }
+      on = true;
+      if (A.state === 'suspended') A.resume();
+      nextT = A.currentTime + 0.12;
+      startedAt = nextT;
+      if (timer) clearInterval(timer);
+      timer = setInterval(tick, 60);
+      tick();
+      return true;
+    }
+    function setVol(v) {
+      vol = v;
+      if (master) master.gain.value = v;
+      if (el) el.volume = v;
+    }
+    return { start: start, stop: stop, pause: pause, resume: resume, setTrack: setTrack,
+             setVol: setVol, isOn: function () { return on; },
+             getTrack: function () { return track; },
+             api: function () { return { on: on, ctx: A ? A.state : null, t: A ? A.currentTime : 0, startAt: startedAt }; } };
+  })();
+
+  /* ================= 音乐 UI ================= */
+  (function () {
+    var player = $('player'), phead = $('phead'), pname = $('pname'), psub = $('psub');
+    var volEl = $('vol'), ico = $('pico');
+    var userPaused = false;
+
+    function running() {
+      var a = Music.api();
+      return a.ctx === 'running' && a.on;
+    }
+
+    function sync() {
+      var on = running();
+      ico.innerHTML = on ? '&#10074;&#10074;' : '&#9654;';
+      player.classList.toggle('playing', on);
+      if (on) psub.textContent = '正在播放 · 60s 循环';
+      else if (userPaused) psub.textContent = '已暂停';
+      else psub.textContent = '点击播放';
+    }
+
+    function toggle() {
+      var a = Music.api();
+      if (a.ctx === 'running' && a.on) { Music.pause(); userPaused = true; }
+      else if (a.on) { Music.resume(); userPaused = false; }
+      else { Music.start(); userPaused = false; }
+      setTimeout(sync, 150);
+    }
+
+    phead.addEventListener('click', function (e) { e.stopPropagation(); toggle(); });
+    volEl.addEventListener('input', function () { Music.setVol(Number(volEl.value) / 100); });
+
+    // 打开自动播放；若被浏览器策略拦截，第一次交互补启
+    setTimeout(function () { Music.start(); setTimeout(sync, 260); }, 280);
+    document.addEventListener('pointerdown', function () {
+      if (running()) return;
+      Music.resume();
+      setTimeout(sync, 160);
+    }, { passive: true });
+    setInterval(sync, 1000);
+    sync();
+  })();
+
+  window.__xmas = {
+    replay: replay,
+    snap: function () {
+      userMoved = false;
+      tgt.az = FINAL.az; tgt.el = FINAL.el; tgt.zoom = FINAL.zoom; tgt.look = FINAL.look;
+      cam.az = FINAL.az; cam.el = FINAL.el; cam.zoom = FINAL.zoom; cam.look = FINAL.look;
+      vel.az = 0; vel.el = 0;
+      return 1;
+    },
+    state: function () {
+      return { codeLines: CODE.length, srcLen: (SELF_SRC || '').length,
+               growT: growT, done: growDone, star: starPop, settle: settle,
+               az: cam.az, el: cam.el, zoom: cam.zoom, look: cam.look,
+               rot: ROT, spin: spin, spinV: spinV,
+               lights: LIGHTS.length, codeSpeed: +codeSpeed.toFixed(2), fx: sparks.length, frames: FRAMES, dpr: DPR, resMul: +resMul.toFixed(2), refresh: refresh, huge: huge, quality: quality, fps: Math.round(fpsAvg), music: Music.api() };
+    }
+  };
+
+  var signEl = document.getElementById('sign');
+  if (signEl) signEl.textContent = '· ' + PERS.mono + ' ·';
+
+  resize();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
