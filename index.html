@@ -280,12 +280,12 @@
   }
   var SP = {
     cream: mk('rgba(255,243,228,0.32)', 'rgba(255,252,247,0.90)'),
-    gold:  mk('rgba(246,190,182,0.34)', 'rgba(255,242,236,0.92)'),
-    rose:  mk('rgba(226,132,164,0.34)', 'rgba(255,226,236,0.90)'),
+    gold:  mk('rgba(252,172,182,0.36)', 'rgba(255,236,238,0.93)'),
+    rose:  mk('rgba(240,110,158,0.40)', 'rgba(255,214,232,0.93)'),
     lav:   mk('rgba(176,164,202,0.23)', 'rgba(233,231,244,0.84)'),
     white: mk('rgba(255,240,242,0.32)', 'rgba(255,250,252,0.97)')
   };
-  var SPK = ['rose', 'cream', 'rose', 'gold', 'rose', 'lav', 'cream', 'white'];
+  var SPK = ['rose', 'rose', 'cream', 'rose', 'gold', 'rose', 'lav', 'white'];
 
   /* ================= 羽毛 / 花瓣 ================= */
   /* 玻璃泡泡：亮边 + 高光，比羽毛安全得多 */
@@ -333,12 +333,12 @@
 
   var PL = {
     cream: makeBubble('255,240,226', 0.55),
-    rose:  makeBubble('255,140,190', 0.56),
+    rose:  makeBubble('255,116,188', 0.60),
     lav:   makeBubble('208,180,255', 0.5),
     gold:  makeBubble('255,214,164', 0.52)
   };
   var PT = {
-    rose: makePetal('255,136,184'),
+    rose: makePetal('255,110,180'),
     cream: makePetal('255,238,222'),
     lav: makePetal('210,184,255')
   };
@@ -649,7 +649,7 @@
     G.bg.addColorStop(0.3, '#06060e');
     G.bg.addColorStop(0.62, '#0b0a12');
     G.bg.addColorStop(0.86, '#100e15');
-    G.bg.addColorStop(1, '#1d0a19');
+    G.bg.addColorStop(1, '#26081f');
 
     G.warm = sctx.createRadialGradient(CX, H * 0.56, 0, CX, H * 0.56, Math.max(W, H) * 0.62);
     G.warm.addColorStop(0, 'rgba(255,158,120,0.10)');
@@ -819,10 +819,10 @@
       g.translate(cx0, cy0);
       g.scale(1, yr / xr);
       var grd = g.createRadialGradient(0, 0, 0, 0, 0, xr);
-      grd.addColorStop(0, 'rgba(242,190,186,' + (al * 0.5).toFixed(3) + ')');
-      grd.addColorStop(0.6, 'rgba(228,152,172,' + (al * 0.42).toFixed(3) + ')');
-      grd.addColorStop(0.9, 'rgba(214,132,174,' + al.toFixed(3) + ')');
-      grd.addColorStop(1, 'rgba(214,132,174,0)');
+      grd.addColorStop(0, 'rgba(248,172,184,' + (al * 0.5).toFixed(3) + ')');
+      grd.addColorStop(0.6, 'rgba(242,124,166,' + (al * 0.42).toFixed(3) + ')');
+      grd.addColorStop(0.9, 'rgba(230,104,172,' + al.toFixed(3) + ')');
+      grd.addColorStop(1, 'rgba(230,104,172,0)');
       g.fillStyle = grd;
       g.beginPath();
       g.arc(0, 0, xr, 0, TAU);
@@ -1799,7 +1799,7 @@
     var grade = ctx.createLinearGradient(0, 0, 0, H);
     grade.addColorStop(0, 'rgba(76,102,164,0.17)');
     grade.addColorStop(0.45, 'rgba(104,98,128,0.06)');
-    grade.addColorStop(1, 'rgba(255,140,188,0.17)');
+    grade.addColorStop(1, 'rgba(255,116,186,0.22)');
     ctx.save();
     ctx.globalCompositeOperation = 'soft-light';
     ctx.fillStyle = grade;
